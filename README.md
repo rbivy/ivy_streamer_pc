@@ -8,10 +8,10 @@ Displays **RGB + Left + Right cameras + Depth stream simultaneously** with telem
 
 ```bash
 # Start Pi quad streamer (all 4 streams including depth)
-./ssh_pi_robust.sh "cd /home/ivyspec/ivy_streamer && source venv/bin/activate && python quad_streamer_fixed.py" &
+./ssh_pi_robust.sh "cd /home/ivyspec/ivy_streamer && source venv/bin/activate && python quad_streamer.py" &
 
 # Start PC video receivers (all 4 streams)
-./test_quad_advanced_overlay_fixed.sh
+./test_quad_advanced_overlay.sh
 ```
 
 **OR for legacy triple streams:**
@@ -52,7 +52,7 @@ chmod +x *.sh
 ssh ivyspec@192.168.1.202
 cd /home/ivyspec/ivy_streamer
 source venv/bin/activate
-python quad_streamer_fixed.py  # All 4 streams including depth (WORKING)
+python quad_streamer.py  # All 4 streams including depth (WORKING)
 # OR
 python triple_streamer.py      # Legacy triple streams only
 ```
@@ -109,7 +109,7 @@ nc -zv 192.168.1.202 5000 5001 5002 5003
 
 ### Quad Streams with Depth (Recommended)
 ```bash
-./test_quad_advanced_overlay_fixed.sh
+./test_quad_advanced_overlay.sh
 ```
 Shows:
 - **4 simultaneous streams**: RGB + Left + Right + Depth
