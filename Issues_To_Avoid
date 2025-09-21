@@ -1,0 +1,173 @@
+# Issues To Avoid - OAK-D Pro Streaming System
+
+This file documents critical issues encountered during development and their solutions.
+Keep this for future reference to avoid repeating the same mistakes.
+
+## DepthAI API Issues
+
+### Issue: "X_LINK_DEVICE_ALREADY_IN_USE" Error
+**Problem**: Using old DepthAI v2.x API patterns causes device lock errors
+**Root Cause**: Incorrect device management and pipeline creation
+**Solution**: Use DepthAI v3.0 API patterns
+```python
+# WRONG (v2.x style):
+device = dai.Device()
+cam_rgb = device.create(dai.node.ColorCamera)
+
+# CORRECT (v3.0 style):
+pipeline = dai.Pipeline()
+cam_rgb = pipeline.create(dai.node.Camera).build()
+with dai.Device(pipeline) as device:
+    # Use device here
+```
+
+### Issue: "No available devices" Error
+**Problem**: Permission issues accessing OAK-D Pro camera
+**Solution**: Set proper udev rules for non-root access
+```bash
+sudo usermod -a -G plugdev ivyspec
+echo 'SUBSYSTEM=="usb", ATTRS{idVendor}=="03e7", MODE="0666"' | sudo tee /etc/udev/rules.d/80-movidius.rules
+sudo udevadm control --reload-rules && sudo udevadm trigger
+```
+
+## Performance Issues
+
+### Issue: Python Receiver Performance (~20fps with frame drops)
+**Problem**: Software-only H.264 decoding in Python with OpenCV/PyAV
+**Root Cause**: CPU-intensive decoding, poor buffer management
+**Solution**: Use GStreamer with hardware-accelerated decoding
+- **Before**: Python receiver ~20fps with decode errors
+- **After**: GStreamer receiver 30fps with zero errors
+- **Performance Gain**: 50% improvement
+
+### Issue: SSH Authentication Inconsistencies
+**Problem**: Some scripts worked, others failed with "Permission denied"
+**Root Cause**: Inconsistent use of sshpass authentication
+**Solution**: Always use sshpass for automated scripts
+```bash
+# WRONG:
+ssh user@host "command"
+
+# CORRECT:
+sshpass -p "password" ssh -o StrictHostKeyChecking=no user@host "command"
+```
+
+## Virtual Environment Issues
+
+### Issue: Import errors and dependency conflicts
+**Problem**: Running code without activating virtual environments
+**Critical Rule**: ALWAYS activate venv before running Python code
+```bash
+# Pi side - MANDATORY
+cd /home/ivyspec/ivy_streamer
+source venv/bin/activate
+python streamer_v3.py
+
+# PC side - For Python receiver only
+cd /home/ryan/ivy_streamer
+source venv/bin/activate
+python pc_receiver.py 192.168.1.202
+```
+
+**Note**: GStreamer receiver doesn't need venv (uses system libraries)
+
+## Network and Connectivity Issues
+
+### Issue: Connection timeouts and failed SSH
+**Problem**: No connection testing before attempting operations
+**Solution**: Always test connectivity first
+```bash
+# Test network connectivity
+ping -c 1 -W 2 192.168.1.202
+
+# Test SSH port
+nc -z 192.168.1.202 22
+
+# Test streaming port
+nc -z 192.168.1.202 5000
+```
+
+### Issue: Firewall blocking streaming port
+**Problem**: Port 5000 blocked on Pi or PC
+**Solution**: Ensure port 5000 is open for TCP traffic
+
+## Development and Testing Issues
+
+### Issue: Experimental code mixed with production
+**Problem**: Multiple versions of scripts causing confusion
+**Solution**: Clean separation of production vs experimental code
+- Keep only essential production files
+- Archive or remove experimental/redundant scripts
+- Use clear naming conventions
+
+### Issue: Poor error handling in scripts
+**Problem**: Scripts fail without clear error messages
+**Solution**: Implement comprehensive error checking
+- Test dependencies before execution
+- Provide clear error messages with solutions
+- Include connectivity checks
+- Use colored output for better visibility
+
+## Camera Hardware Issues
+
+### Issue: OAK-D Pro not detected
+**Checks to perform**:
+1. `lsusb | grep Movidius` - Should show camera
+2. Check USB3 connection (blue port)
+3. Power cycle the camera (unplug/replug)
+4. Check for device permissions (udev rules)
+
+### Issue: Camera busy/locked
+**Solution**: Kill any existing camera processes
+```bash
+pkill -f "streamer"
+pkill -f "depthai"
+```
+
+## Documentation Issues
+
+### Issue: Outdated or conflicting documentation
+**Problem**: Multiple README files with different instructions
+**Solution**: Single source of truth
+- One main README.md with current instructions
+- FUTURE_SELF_GUIDE.md for quick reference
+- This Issues_To_Avoid file for troubleshooting
+
+## Key Lessons Learned
+
+1. **Always use virtual environments** for Python components
+2. **GStreamer is significantly better** than Python for video reception
+3. **DepthAI v3.0 API** must be used correctly to avoid device locks
+4. **Robust error handling** prevents user frustration
+5. **Clean file organization** reduces confusion
+6. **Comprehensive diagnostics** (system_diagnostic.sh) save time
+7. **SSH automation** requires consistent authentication patterns
+
+## Recovery Commands
+
+If everything breaks, use these commands:
+```bash
+# Kill all processes
+./stop_streamer.sh
+
+# Run diagnostics
+./system_diagnostic.sh
+
+# Restart with robust scripts
+./start_streamer.sh
+./start_gst_receiver_robust.sh
+```
+
+## Version History
+
+- **v1.0**: Initial Python-only implementation (~20fps)
+- **v2.0**: GStreamer integration (30fps, current)
+- **v2.1**: Cleanup and robust error handling
+
+**REMEMBER**: This system works well when used correctly. Most issues come from:
+1. Not using virtual environments
+2. Using wrong DepthAI API patterns
+3. Poor network connectivity
+4. Missing dependencies
+
+Keep this file updated with any new issues discovered!

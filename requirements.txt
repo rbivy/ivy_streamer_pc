@@ -1,0 +1,13 @@
+# OAK-D Pro Video Streamer Requirements
+
+# For Raspberry Pi 5 (streamer)
+depthai>=3.0.0
+numpy>=1.21.0
+
+# For PC (receiver)
+opencv-python>=4.5.0
+av>=10.0.0  # PyAV for H.264 decoding
+numpy>=1.21.0
+
+# Optional for enhanced performance
+psutil>=5.8.0  # System monitoring
