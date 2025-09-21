@@ -46,7 +46,7 @@ python quad_streamer.py  # All 4 streams including depth
 ```
 
 **Quad Streamer Features:**
-- **RGB**: 1920x1080 @ 30fps (H.264, 8Mbps) - Port 5000
+- **RGB**: 1280x720 @ 30fps (H.264, 8Mbps) - Port 5000
 - **Left Mono**: 1280x720 @ 30fps (H.264, 3Mbps) - Port 5001
 - **Right Mono**: 1280x720 @ 30fps (H.264, 3Mbps) - Port 5002
 - **Depth**: 1280x720 @ 30fps (JPEG-encoded) - Port 5003
@@ -138,7 +138,7 @@ Shows:
 
 - Pi streaming on ports 5000, 5001, 5002, 5003
 - Same network as Raspberry Pi
-- ~18 Mbps bandwidth for full resolution (4 streams)
+- ~14 Mbps bandwidth for full resolution (4 streams)
 - GStreamer and OpenCV installed on PC
 
 ## Features
@@ -205,7 +205,7 @@ gst-launch-1.0 tcpclientsrc host=192.168.1.202 port=5000 ! h264parse ! avdec_h26
 ```
 
 ### Poor Video Quality
-- **Network**: Use wired Ethernet instead of WiFi (18+ Mbps required for 4 streams)
+- **Network**: Use wired Ethernet instead of WiFi (14+ Mbps required for 4 streams)
 - **Bandwidth**: Reduce Pi streaming resolution/FPS if needed
 - **CPU**: Close other applications consuming resources
 - **Depth stream**: If depth is slow, check OpenCV installation

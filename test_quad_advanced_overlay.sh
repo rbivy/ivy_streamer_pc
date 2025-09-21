@@ -7,7 +7,7 @@ echo "========================================="
 echo "  Advanced Quad Streams with Depth"
 echo "========================================="
 echo "Starting 4 video windows:"
-echo "  RGB:   Port 5000 (1920x1080 @ 30fps) - H.264"
+echo "  RGB:   Port 5000 (1280x720 @ 30fps) - H.264"
 echo "  Left:  Port 5001 (1280x720 @ 30fps) - H.264"
 echo "  Right: Port 5002 (1280x720 @ 30fps) - H.264"
 echo "  Depth: Port 5003 (1280x720 @ 30fps) - JPEG"
@@ -22,7 +22,7 @@ gst-launch-1.0 -v \
     videoconvert ! \
     clockoverlay halignment=right valignment=top font-desc="Sans, 10" \
         time-format="%D %H:%M:%S" ! \
-    textoverlay text="RGB Stream | 1920x1080 @ 30fps | Port 5000" \
+    textoverlay text="RGB Stream | 1280x720 @ 30fps | Port 5000" \
         valignment=top halignment=left font-desc="Sans Bold, 12" \
         shaded-background=true ! \
     fpsdisplaysink text-overlay=true video-sink=autovideosink sync=false &
@@ -130,16 +130,47 @@ echo ""
 echo "RGB, Left, Right: H.264 streams with GStreamer overlays"
 echo "Depth: JPEG stream with OpenCV display"
 echo ""
-echo "Press Ctrl+C to stop all receivers"
+echo "Press Ctrl+C or close any video window to stop all receivers and Pi processes"
 
-# Cleanup function
+# Enhanced cleanup function - stops both PC receivers and Pi processes
 cleanup() {
     echo ""
     echo "Stopping all streams..."
-    kill $RGB_PID $LEFT_PID $RIGHT_PID $DEPTH_PID 2>/dev/null
-    echo "All receivers stopped"
+
+    # Stop monitor process if running
+    if [ ! -z "$MONITOR_PID" ]; then
+        kill $MONITOR_PID 2>/dev/null || true
+    fi
+
+    # Stop PC receivers
+    echo "Stopping PC receivers..."
+    kill $RGB_PID $LEFT_PID $RIGHT_PID $DEPTH_PID 2>/dev/null || true
+
+    # Stop Pi quad streamer processes
+    echo "Stopping Pi quad streamer..."
+    ./ssh_pi_robust.sh "pkill -f quad_streamer.py" 2>/dev/null || true
+
+    echo "All receivers and Pi processes stopped"
 }
 
 trap cleanup SIGINT SIGTERM
+
+# Monitor processes and cleanup when any exit
+monitor_processes() {
+    while true; do
+        # Check if any of the main processes have exited
+        if ! kill -0 $RGB_PID 2>/dev/null || ! kill -0 $LEFT_PID 2>/dev/null || ! kill -0 $RIGHT_PID 2>/dev/null || ! kill -0 $DEPTH_PID 2>/dev/null; then
+            echo ""
+            echo "Video window closed or process exited. Cleaning up..."
+            cleanup
+            exit 0
+        fi
+        sleep 1
+    done
+}
+
+# Start monitoring in background and wait for processes
+monitor_processes &
+MONITOR_PID=$!
 
 wait
