@@ -7,14 +7,16 @@ Displays **RGB + Left + Right cameras simultaneously** with telemetry, FPS, time
 ## ⚡ Quick Start (TL;DR)
 
 ```bash
-# 1. Start Pi streamer (from PC)
-sshpass -p "ivyspec" ssh -o StrictHostKeyChecking=no ivyspec@192.168.1.202 \
-  "cd /home/ivyspec/ivy_streamer && source venv/bin/activate && python triple_streamer.py" &
+# One command - complete setup with cleanup
+./start_triple_advanced_overlay.sh
+```
 
-# 2. Wait for Pi initialization
-sleep 10
+**OR step-by-step:**
+```bash
+# 1. Start Pi streamer with automatic cleanup
+./start_triple.sh
 
-# 3. Start PC video receivers
+# 2. Start PC video receivers
 ./test_triple_advanced_overlay.sh
 ```
 
@@ -45,17 +47,25 @@ python triple_streamer.py
 
 ### Start Video Streaming
 
-**Method 1: Start Pi from PC (Recommended)**
+**Method 1: Automated Startup (Recommended)**
 ```bash
-# From PC - automatically starts Pi streamer via SSH
-sshpass -p "ivyspec" ssh -o StrictHostKeyChecking=no ivyspec@192.168.1.202 \
-  "cd /home/ivyspec/ivy_streamer && source venv/bin/activate && python triple_streamer.py" &
+# Smart startup script with automatic cleanup
+./start_triple.sh
 
-# Wait 5-10 seconds for Pi to initialize, then start PC receiver
+# Once Pi streams are ready, start PC receivers
 ./test_triple_advanced_overlay.sh
 ```
 
-**Method 2: Manual Steps**
+**Method 2: Manual Pi Control**
+```bash
+# Start Pi streamer manually via SSH
+./ssh_pi_robust.sh "cd /home/ivyspec/ivy_streamer && source venv/bin/activate && python triple_streamer.py" &
+
+# Wait for initialization, then start PC receiver
+sleep 10 && ./test_triple_advanced_overlay.sh
+```
+
+**Method 3: Full Manual Setup**
 ```bash
 # 1. First verify Pi connectivity
 nc -zv 192.168.1.202 5000 5001 5002
@@ -93,6 +103,15 @@ No overlays, minimal CPU usage
 
 ## Utility Scripts
 
+### Pi Streamer Management
+```bash
+# Start Pi streamer with automatic cleanup (RECOMMENDED)
+./start_triple.sh
+
+# Stop Pi streamer
+./ssh_pi_robust.sh "pkill -f triple_streamer.py"
+```
+
 ### SSH and Pi Management
 ```bash
 # Connect to Pi interactively
@@ -101,7 +120,7 @@ No overlays, minimal CPU usage
 # Run command on Pi
 ./ssh_pi_robust.sh "command here"
 
-# Start Pi streamer remotely (alternative method)
+# Start Pi streamer manually (alternative method)
 ./ssh_pi_robust.sh "cd /home/ivyspec/ivy_streamer && source venv/bin/activate && python triple_streamer.py"
 
 # System diagnostics
@@ -126,6 +145,8 @@ No overlays, minimal CPU usage
 
 ## Files in this Repository
 
+- `start_triple_advanced_overlay.sh` - **Complete setup** - Pi streamer + PC receivers (ONE COMMAND)
+- `start_triple.sh` - **Smart Pi startup** with automatic cleanup (RECOMMENDED)
 - `test_triple_advanced_overlay.sh` - **Advanced receiver** with full telemetry overlays
 - `test_triple_overlay.sh` - **Basic receiver** with FPS overlay only
 - `test_triple.sh` - **Simple receiver** without overlays (minimal CPU)
@@ -158,15 +179,16 @@ No overlays, minimal CPU usage
 
 ### No Video Windows Appear
 ```bash
-# 1. Check if Pi is streaming (should show "succeeded" for all ports)
+# 1. Use the smart startup script (handles cleanup automatically)
+./start_triple.sh
+
+# 2. If that fails, check ports manually
 nc -zv 192.168.1.202 5000 5001 5002
 
-# 2. If ports are closed, start Pi streamer first
-sshpass -p "ivyspec" ssh -o StrictHostKeyChecking=no ivyspec@192.168.1.202 \
-  "cd /home/ivyspec/ivy_streamer && source venv/bin/activate && python triple_streamer.py" &
-
-# 3. Wait 10 seconds, then check ports again
-sleep 10 && nc -zv 192.168.1.202 5000 5001 5002
+# 3. If ports are closed, try manual cleanup and restart
+./ssh_pi_robust.sh "pkill -f triple_streamer.py"
+sleep 3
+./start_triple.sh
 
 # 4. Verify GStreamer installation
 gst-inspect-1.0 --version

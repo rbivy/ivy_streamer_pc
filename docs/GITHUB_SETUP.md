@@ -1,4 +1,10 @@
-# GitHub Setup Instructions
+# GitHub Setup Instructions - PC Receivers Repository
+
+## Repository Information
+- **PC Repository**: https://github.com/rbivy/ivy_streamer_pc
+- **Pi Repository**: https://github.com/rbivy/ivy_streamer_pi (separate)
+- **User**: rbivy
+- **Email**: rbeech@ivyspec.com
 
 ## Manual Steps Required
 
@@ -10,13 +16,13 @@ GitHub requires Personal Access Token (PAT) or SSH authentication. Password auth
    - Go to GitHub.com and log in as `rbivy`
    - Go to Settings → Developer settings → Personal access tokens → Tokens (classic)
    - Click "Generate new token (classic)"
-   - Give it a name like "ivy_streamer"
+   - Give it a name like "ivy_streamer_pc"
    - Select scopes: `repo` (full control)
    - Generate and copy the token
 
 2. **Update the remote URL with token:**
    ```bash
-   git remote set-url origin https://rbivy:YOUR_TOKEN_HERE@github.com/rbivy/ivy_streamer.git
+   git remote set-url origin https://rbivy:YOUR_TOKEN_HERE@github.com/rbivy/ivy_streamer_pc.git
    ```
 
 3. **Push the code:**
@@ -38,40 +44,35 @@ GitHub requires Personal Access Token (PAT) or SSH authentication. Password auth
 
 3. **Change remote to SSH:**
    ```bash
-   git remote set-url origin git@github.com:rbivy/ivy_streamer.git
+   git remote set-url origin git@github.com:rbivy/ivy_streamer_pc.git
    git push -u origin main
    ```
 
-## For Raspberry Pi
+## For Raspberry Pi (Separate Repository)
 
-After pushing from PC, on the Raspberry Pi:
+The Pi side has its own separate repository. After setting up PC repository:
 
 ```bash
-# Remove old directory
+# On Pi - clone the Pi-specific repository
 cd /home/ivyspec
-rm -rf ivy_streamer
-
-# Clone with credentials
-git clone https://rbivy:YOUR_TOKEN_HERE@github.com/rbivy/ivy_streamer.git
+git clone https://rbivy:YOUR_TOKEN_HERE@github.com/rbivy/ivy_streamer_pi.git ivy_streamer
 
 # Or with SSH
-git clone git@github.com:rbivy/ivy_streamer.git
+git clone git@github.com:rbivy/ivy_streamer_pi.git ivy_streamer
 
-# Set up virtual environment
+# Set up virtual environment (Pi side only)
 cd ivy_streamer
 python3 -m venv venv
 source venv/bin/activate
 pip install depthai numpy
 ```
 
-## Repository Information
-- **User:** rbivy
-- **Email:** rbeech@ivyspec.com
-- **Repository:** ivy_streamer
-- **Description:** OAK-D Pro triple video streamer for Raspberry Pi
+## Repository Descriptions
+- **PC Repository (this one)**: OAK-D Pro GStreamer receivers for PC
+- **Pi Repository (separate)**: OAK-D Pro Python streamers for Raspberry Pi
 
 ## Current Status
-- ✅ Local Git repository initialized
-- ✅ Initial commit created
-- ⏳ Awaiting GitHub authentication setup
-- ⏳ Ready to push once authentication is configured
+- ✅ PC-only architecture implemented
+- ✅ GStreamer-based receivers
+- ✅ Automatic cleanup and startup scripts
+- ⏳ Ready to push to GitHub once authentication is configured

@@ -1,6 +1,6 @@
-# Future Self Guide - OAK-D Pro Triple Video Streamer
+# Future Self Guide - OAK-D Pro PC Receivers
 
-## CRITICAL INFORMATION FOR FUTURE USE - TRIPLE STREAM ARCHITECTURE
+## CRITICAL INFORMATION - PC-ONLY GSTREAMER ARCHITECTURE
 
 ### Pi Connection Details
 - **IP Address**: 192.168.1.202
@@ -8,200 +8,164 @@
 - **Password**: ivyspec
 - **SSH Port**: 22 (default)
 
-### MANDATORY: ALWAYS USE VIRTUAL ENVIRONMENTS
+### IMPORTANT: PC-ONLY ARCHITECTURE
 
-#### On Raspberry Pi
+This repository is now **PC-side only** using **GStreamer** - no Python virtual environment needed on PC!
+
+#### PC Side (This Repository)
 ```bash
-# ALWAYS activate Pi's venv first
+# NO virtual environment needed! Uses system GStreamer
+sudo apt install gstreamer1.0-tools gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-plugins-bad
+
+# One command startup
+./start_triple_advanced_overlay.sh
+```
+
+#### Pi Side (Separate Repository)
+```bash
+# Pi still needs virtual environment for Python streaming
 cd /home/ivyspec/ivy_streamer
 source venv/bin/activate
+python triple_streamer.py
 ```
 
-#### On PC
+## Quick Start Commands - CURRENT ARCHITECTURE
+
+### 1. Complete System (One Command)
 ```bash
-# ALWAYS activate PC's venv first
-cd /home/ryan/ivy_streamer
-source venv/bin/activate
+# Handles Pi startup + PC receivers automatically
+./start_triple_advanced_overlay.sh
 ```
 
-**WARNING**: Never run the code without activating the virtual environments. This prevents dependency conflicts and ensures consistent behavior.
-
-## Quick Start Commands - TRIPLE STREAM ARCHITECTURE
-
-### 1. Connect to Pi (Automated)
+### 2. Manual Steps
 ```bash
-# Interactive SSH
-./ssh_pi.sh
-
-# Run single command
-./ssh_pi.sh "command here"
-```
-
-### 2. Start Triple Streaming (One Command)
-```bash
-# Start triple streamer on Pi automatically (RGB + Left + Right cameras)
+# Step 1: Start Pi streamer with cleanup
 ./start_triple.sh
+
+# Step 2: Start PC receivers
+./test_triple_advanced_overlay.sh
 ```
 
-### 3. Start PC Receivers (RECOMMENDED)
-
-#### All 3 Streams Simultaneously (Full 30fps each)
+### 3. Individual Stream Access
 ```bash
-# Opens 3 video windows: RGB, Left Camera, Right Camera
-./test_triple.sh
-```
-
-#### Individual Stream Access
-```bash
-# RGB stream only (color, 1920x1080)
+# RGB stream (1920x1080 @ 30fps)
 gst-launch-1.0 tcpclientsrc host=192.168.1.202 port=5000 ! h264parse ! avdec_h264 ! videoconvert ! autovideosink sync=false
 
-# Left camera only (mono, 1280x720)
+# Left camera (1280x720 @ 30fps)
 gst-launch-1.0 tcpclientsrc host=192.168.1.202 port=5001 ! h264parse ! avdec_h264 ! videoconvert ! autovideosink sync=false
 
-# Right camera only (mono, 1280x720)
+# Right camera (1280x720 @ 30fps)
 gst-launch-1.0 tcpclientsrc host=192.168.1.202 port=5002 ! h264parse ! avdec_h264 ! videoconvert ! autovideosink sync=false
 ```
 
-## Manual Pi Connection Steps
-
-If automation scripts fail:
-
-1. **SSH to Pi**:
-   ```bash
-   sshpass -p "ivyspec" ssh ivyspec@192.168.1.202
-   ```
-
-2. **Navigate and activate venv**:
-   ```bash
-   cd ivy_streamer
-   source venv/bin/activate
-   ```
-
-3. **Start triple streamer**:
-   ```bash
-   python triple_streamer.py
-   ```
-
 ## Troubleshooting Common Issues
 
-### 1. "X_LINK_DEVICE_ALREADY_IN_USE" Error
-This was fixed by implementing proper DepthAI v3.0 patterns. If it occurs:
-- The triple_streamer.py follows correct v3.0 API (no explicit device creation)
-- Uses context manager pattern with `with pipeline:`
-- Creates queues BEFORE `pipeline.start()`
-
-### 2. "No available devices" Error
-Fixed by setting proper udev rules:
+### 1. "Connection refused" on ports 5000/5001/5002
 ```bash
-# These commands were run and should persist:
-./ssh_pi.sh "sudo usermod -a -G plugdev ivyspec"
-./ssh_pi.sh "echo 'SUBSYSTEM==\"usb\", ATTRS{idVendor}==\"03e7\", MODE=\"0666\"' | sudo tee /etc/udev/rules.d/80-movidius.rules"
-./ssh_pi.sh "sudo udevadm control --reload-rules && sudo udevadm trigger"
+# Use the smart startup script (handles cleanup automatically)
+./start_triple.sh
+
+# Manual check if needed
+nc -zv 192.168.1.202 5000 5001 5002
 ```
 
-### 3. Connection Refused on Ports
-- Check if triple streamer is running: `./ssh_pi.sh "ps aux | grep triple_streamer"`
-- Test ports:
-  - `nc -zv 192.168.1.202 5000` (RGB)
-  - `nc -zv 192.168.1.202 5001` (Left)
-  - `nc -zv 192.168.1.202 5002` (Right)
-- Restart streamer: `./start_triple.sh`
-
-### 4. Virtual Environment Issues
-If venv is corrupted:
-
-**On Pi**:
+### 2. "No video windows appear"
 ```bash
-./ssh_pi.sh "cd ivy_streamer && python3 -m venv venv && source venv/bin/activate && pip install depthai numpy"
+# Complete automated setup
+./start_triple_advanced_overlay.sh
+
+# Verify GStreamer installation
+gst-inspect-1.0 --version
 ```
 
-**On PC**:
+### 3. SSH connection issues
 ```bash
-cd ivy_streamer
-python3 -m venv venv
-source venv/bin/activate
-pip install opencv-python av numpy
+# Test connectivity
+ping -c 1 192.168.1.202
+
+# Interactive SSH session
+./ssh_pi_robust.sh
+
+# Run command on Pi
+./ssh_pi_robust.sh "command here"
 ```
 
 ## File Structure Reference
 
 ```
-ivy_streamer/
-├── venv/                    # Virtual environment (CRITICAL - always use)
-├── streamer_v3.py          # Pi streamer (DepthAI v3.0 compliant)
-├── pc_receiver.py          # PC receiver
-├── ssh_pi.sh              # Automated SSH script
-├── start_streamer.sh      # Automated streamer startup
-├── requirements.txt       # Dependencies
-├── README.md             # Basic usage
-├── DOCUMENTATION.md      # Detailed docs
-└── FUTURE_SELF_GUIDE.md  # This file
+ivy_streamer/ (PC SIDE - THIS REPO)
+├── start_triple_advanced_overlay.sh  # Complete one-command setup
+├── start_triple.sh                   # Smart Pi startup with cleanup
+├── test_triple_advanced_overlay.sh   # PC receivers with overlays
+├── test_triple.sh                    # Simple PC receivers
+├── ssh_pi_robust.sh                  # Robust SSH connection
+├── system_diagnostic.sh              # System diagnostics
+├── requirements.txt                  # GStreamer system packages
+├── README.md                         # Main documentation
+└── docs/                            # Additional guides
 ```
-
-## Key Learning Points
-
-1. **DepthAI v3.0 API Changes**: The original code used v2.x patterns that caused device lock errors. Fixed version uses:
-   - `pipeline.create(dai.node.Camera).build()` (not manual camera creation)
-   - `pipeline.start()` without explicit device
-   - Context manager: `with pipeline:`
-   - Queue creation before pipeline start
-
-2. **Device Permissions**: OAK-D Pro requires proper udev rules for non-root access
-
-3. **Virtual Environments**: Critical for preventing dependency conflicts between system packages and project requirements
-
-4. **Automation**: SSH password authentication automated with sshpass for seamless operation
 
 ## Current Working Configuration
 
-- **Pi**: Raspberry Pi 5 at 192.168.1.202
-- **Camera**: OAK-D Pro (USB 3.0 connected)
-- **Streaming**: H.264 over TCP port 5000
-- **Resolution**: Default 1920x1080 @ 30fps (configurable)
+- **PC**: GStreamer receivers (no Python needed)
+- **Pi**: Python streamers with DepthAI (separate repository)
+- **Camera**: OAK-D Pro (USB 3.0 connected to Pi)
+- **Streaming**: H.264 over TCP ports 5000, 5001, 5002
+- **Resolution**:
+  - RGB: 1920x1080 @ 30fps
+  - Left/Right: 1280x720 @ 30fps
 - **Network**: Local ethernet/WiFi (same subnet required)
+
+## Performance Comparison
+
+**GStreamer Receivers (CURRENT - RECOMMENDED)**:
+- Full 30fps at target resolutions
+- Zero dropped frames
+- Hardware-accelerated decoding
+- No virtual environment needed
+- System integration
+
+**Legacy Python Receivers (DEPRECATED)**:
+- ~20fps with frame drops
+- Software-only decoding
+- Required virtual environment
+- Higher CPU usage
 
 ## Emergency Commands
 
 If everything breaks:
 
-1. **Kill all processes**:
-   ```bash
-   ./stop_streamer.sh
-   ```
+```bash
+# Kill all Pi streamers
+./ssh_pi_robust.sh "pkill -f triple_streamer.py"
 
-2. **Restart from scratch**:
-   ```bash
-   ./start_streamer.sh  # Automatically kills existing streamers first
+# Complete restart
+./start_triple_advanced_overlay.sh
 
-   # RECOMMENDED: GStreamer receiver (Full 30fps)
-   gst-launch-1.0 tcpclientsrc host=192.168.1.202 port=5000 ! h264parse ! avdec_h264 ! videoconvert ! autovideosink sync=false
+# System diagnostics
+./system_diagnostic.sh
 
-   # OR Legacy: Python receiver (~20fps)
-   source venv/bin/activate && python pc_receiver.py 192.168.1.202
-   ```
+# Manual Pi check
+./ssh_pi_robust.sh "lsusb | grep Movidius"  # Check camera
+nc -zv 192.168.1.202 5000 5001 5002         # Check ports
+```
 
-3. **Check system status**:
-   ```bash
-   ./ssh_pi.sh "lsusb | grep Movidius"  # Check camera
-   nc -zv 192.168.1.202 5000            # Check port
-   ```
+## Repository Architecture
 
-## Performance Comparison
+### This Repository (PC Receivers)
+- **Purpose**: GStreamer-based video receivers
+- **Language**: Shell scripts + GStreamer
+- **Dependencies**: System GStreamer packages
+- **No Python virtual environment needed**
 
-**GStreamer Receiver (RECOMMENDED)**:
-- Full 30fps at 1920x1080
-- Zero dropped frames
-- No decode errors
-- Hardware-accelerated decoding
-- No virtual environment needed
+### Pi Repository (Separate)
+- **Purpose**: DepthAI Python streamers
+- **Language**: Python + DepthAI
+- **Dependencies**: Python virtual environment required
+- **Location**: https://github.com/rbivy/ivy_streamer_pi
 
-**Python Receiver (Legacy)**:
-- ~20fps at 1920x1080
-- Frame drops and decode errors
-- Software decoding only
-- Requires virtual environment
+## Remember: NO PYTHON VIRTUAL ENVIRONMENT ON PC SIDE
 
-## Remember: VIRTUAL ENVIRONMENTS ARE NOT OPTIONAL (for Python components)
+This repository now uses **system GStreamer only**. The PC side has been converted from Python to pure GStreamer for better performance and simpler setup.
 
-Pi streamer and Python receiver must be run with the appropriate virtual environment activated. GStreamer receiver uses system libraries and doesn't need venv.
+Only the Pi side (separate repository) still requires Python virtual environment for the DepthAI streaming code.

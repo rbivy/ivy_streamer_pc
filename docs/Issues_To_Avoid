@@ -32,13 +32,14 @@ sudo udevadm control --reload-rules && sudo udevadm trigger
 
 ## Performance Issues
 
-### Issue: Python Receiver Performance (~20fps with frame drops)
+### Issue: Python Receiver Performance (~20fps with frame drops) [RESOLVED]
 **Problem**: Software-only H.264 decoding in Python with OpenCV/PyAV
 **Root Cause**: CPU-intensive decoding, poor buffer management
-**Solution**: Use GStreamer with hardware-accelerated decoding
+**Solution**: **CONVERTED TO GSTREAMER** - PC side now uses GStreamer only
 - **Before**: Python receiver ~20fps with decode errors
 - **After**: GStreamer receiver 30fps with zero errors
 - **Performance Gain**: 50% improvement
+- **Current Status**: PC side completely converted to GStreamer (no Python needed)
 
 ### Issue: SSH Authentication Inconsistencies
 **Problem**: Some scripts worked, others failed with "Permission denied"
@@ -54,22 +55,27 @@ sshpass -p "password" ssh -o StrictHostKeyChecking=no user@host "command"
 
 ## Virtual Environment Issues
 
-### Issue: Import errors and dependency conflicts
-**Problem**: Running code without activating virtual environments
-**Critical Rule**: ALWAYS activate venv before running Python code
+### Issue: Import errors and dependency conflicts (LEGACY)
+**Problem**: This was an issue when PC side used Python receivers
+**Current Status**: **PC SIDE NO LONGER USES PYTHON** - uses GStreamer only!
+
+#### Pi Side (Still Relevant)
 ```bash
-# Pi side - MANDATORY
+# Pi side - MANDATORY for Python streaming
 cd /home/ivyspec/ivy_streamer
 source venv/bin/activate
-python streamer_v3.py
-
-# PC side - For Python receiver only
-cd /home/ryan/ivy_streamer
-source venv/bin/activate
-python pc_receiver.py 192.168.1.202
+python triple_streamer.py
 ```
 
-**Note**: GStreamer receiver doesn't need venv (uses system libraries)
+#### PC Side (Current Architecture)
+```bash
+# PC side - NO virtual environment needed!
+# Uses system GStreamer packages only
+sudo apt install gstreamer1.0-tools gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-plugins-bad
+
+# Start system
+./start_triple_advanced_overlay.sh
+```
 
 ## Network and Connectivity Issues
 
@@ -135,39 +141,43 @@ pkill -f "depthai"
 
 ## Key Lessons Learned
 
-1. **Always use virtual environments** for Python components
-2. **GStreamer is significantly better** than Python for video reception
-3. **DepthAI v3.0 API** must be used correctly to avoid device locks
+1. **Virtual environments only for Pi side** (Python DepthAI streaming)
+2. **GStreamer is significantly better** than Python for video reception → **PC converted to GStreamer-only**
+3. **DepthAI v3.0 API** must be used correctly to avoid device locks (Pi side)
 4. **Robust error handling** prevents user frustration
 5. **Clean file organization** reduces confusion
 6. **Comprehensive diagnostics** (system_diagnostic.sh) save time
 7. **SSH automation** requires consistent authentication patterns
+8. **Automatic cleanup** essential for reliable startup (start_triple.sh)
 
 ## Recovery Commands
 
 If everything breaks, use these commands:
 ```bash
-# Kill all processes
-./stop_streamer.sh
+# Kill all Pi streamers
+./ssh_pi_robust.sh "pkill -f triple_streamer.py"
 
 # Run diagnostics
 ./system_diagnostic.sh
 
-# Restart with robust scripts
-./start_streamer.sh
-./start_gst_receiver_robust.sh
+# Complete restart with cleanup
+./start_triple_advanced_overlay.sh
+
+# Or step-by-step
+./start_triple.sh                    # Pi streamer with cleanup
+./test_triple_advanced_overlay.sh    # PC receivers
 ```
 
 ## Version History
 
 - **v1.0**: Initial Python-only implementation (~20fps)
-- **v2.0**: GStreamer integration (30fps, current)
+- **v2.0**: GStreamer integration (30fps)
 - **v2.1**: Cleanup and robust error handling
+- **v3.0**: **PC-only architecture** - converted to GStreamer-only (current)
 
-**REMEMBER**: This system works well when used correctly. Most issues come from:
-1. Not using virtual environments
-2. Using wrong DepthAI API patterns
-3. Poor network connectivity
-4. Missing dependencies
+**REMEMBER**: This PC-side repository works well when used correctly. Most issues come from:
+1. **PC side**: Missing GStreamer packages, network connectivity issues
+2. **Pi side**: Not using virtual environments, wrong DepthAI API patterns
+3. **Both**: Poor network connectivity, port conflicts
 
 Keep this file updated with any new issues discovered!
