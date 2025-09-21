@@ -1,22 +1,32 @@
 # OAK-D Pro PC Receivers
 
-**Production-ready GStreamer receivers** with advanced real-time overlays for OAK-D Pro triple video streams.
+**Production-ready GStreamer receivers** with advanced real-time overlays for OAK-D Pro quad video streams.
 
-Displays **RGB + Left + Right cameras simultaneously** with telemetry, FPS, timestamps, and monitoring.
+Displays **RGB + Left + Right cameras + Depth stream simultaneously** with telemetry, FPS, timestamps, and monitoring.
 
 ## ⚡ Quick Start (TL;DR)
 
 ```bash
-# One command - complete setup with cleanup
+# Start Pi quad streamer (all 4 streams including depth)
+./ssh_pi_robust.sh "cd /home/ivyspec/ivy_streamer && source venv/bin/activate && python quad_streamer_fixed.py" &
+
+# Start PC video receivers (all 4 streams)
+./test_quad_advanced_overlay_fixed.sh
+```
+
+**OR for legacy triple streams:**
+```bash
+# Complete triple setup
 ./start_triple_advanced_overlay.sh
 ```
 
-**OR step-by-step:**
+**Legacy triple streams (without depth):**
 ```bash
-# 1. Start Pi streamer with automatic cleanup
-./start_triple.sh
+# Complete triple setup
+./start_triple_advanced_overlay.sh
 
-# 2. Start PC video receivers
+# OR step-by-step
+./start_triple.sh
 ./test_triple_advanced_overlay.sh
 ```
 
@@ -38,16 +48,35 @@ chmod +x *.sh
 ### Pi Side Setup (Required First)
 ```bash
 # Pi repository: https://github.com/rbivy/ivy_streamer_pi
-# SSH to Pi and start the streamer using the virtual environment
+# SSH to Pi and start the quad streamer using the virtual environment
 ssh ivyspec@192.168.1.202
 cd /home/ivyspec/ivy_streamer
 source venv/bin/activate
-python triple_streamer.py
+python quad_streamer_fixed.py  # All 4 streams including depth (WORKING)
+# OR
+python triple_streamer.py      # Legacy triple streams only
 ```
+
+**Quad Streamer Features:**
+- **RGB**: 1920x1080 @ 30fps (H.264, 8Mbps) - Port 5000
+- **Left Mono**: 1280x720 @ 30fps (H.264, 3Mbps) - Port 5001
+- **Right Mono**: 1280x720 @ 30fps (H.264, 3Mbps) - Port 5002
+- **Depth**: 1280x720 @ 30fps (JPEG-encoded) - Port 5003
+- **Multithreaded**: 4 separate TCP servers for optimal performance
+- **Real-time depth**: Stereo computation with HIGH_DETAIL preset
 
 ### Start Video Streaming
 
-**Method 1: Automated Startup (Recommended)**
+**Method 1: Automated Quad Streaming (Recommended)**
+```bash
+# Smart quad startup with depth stream
+./start_quad.sh
+
+# Once Pi streams are ready, start PC receivers with depth
+./test_quad_advanced_overlay.sh
+```
+
+**Method 2: Legacy Triple Streaming**
 ```bash
 # Smart startup script with automatic cleanup
 ./start_triple.sh
@@ -56,33 +85,49 @@ python triple_streamer.py
 ./test_triple_advanced_overlay.sh
 ```
 
-**Method 2: Manual Pi Control**
+**Method 3: Manual Pi Control**
 ```bash
-# Start Pi streamer manually via SSH
-./ssh_pi_robust.sh "cd /home/ivyspec/ivy_streamer && source venv/bin/activate && python triple_streamer.py" &
+# Start Pi quad streamer manually via SSH
+./ssh_pi_robust.sh "cd /home/ivyspec/ivy_streamer && source venv/bin/activate && python quad_streamer.py" &
 
 # Wait for initialization, then start PC receiver
-sleep 10 && ./test_triple_advanced_overlay.sh
+sleep 12 && ./test_quad_advanced_overlay.sh
 ```
 
-**Method 3: Full Manual Setup**
+**Method 4: Full Manual Setup**
 ```bash
-# 1. First verify Pi connectivity
-nc -zv 192.168.1.202 5000 5001 5002
+# 1. First verify Pi connectivity (including depth port)
+nc -zv 192.168.1.202 5000 5001 5002 5003
 
 # 2. If ports are closed, start Pi streamer (see Pi Side Setup above)
 
 # 3. Once Pi ports are open, start PC receiver
-./test_triple_advanced_overlay.sh
+./test_quad_advanced_overlay.sh
 ```
 
 ## Receiver Scripts
 
-### Advanced Overlays (Recommended)
+### Quad Streams with Depth (Recommended)
+```bash
+./test_quad_advanced_overlay_fixed.sh
+```
+Shows:
+- **4 simultaneous streams**: RGB + Left + Right + Depth
+- **RGB/Left/Right**: H.264 streams with GStreamer overlays
+- **Depth**: JPEG-encoded depth map with OpenCV display
+- Stream name and resolution overlays
+- Current timestamp overlays
+- Real-time FPS counters
+- **Depth visualization**: Real-time stereo-computed depth map in grayscale
+
+**Performance**: ~25fps RGB, ~12-15fps stereo cameras, ~30fps depth computation
+
+### Advanced Triple Overlays (Legacy)
 ```bash
 ./test_triple_advanced_overlay.sh
 ```
 Shows:
+- **3 simultaneous streams**: RGB + Left + Right
 - Stream name and resolution (top left)
 - Current timestamp (top right)
 - Real-time FPS counter (bottom)
