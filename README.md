@@ -1,4 +1,4 @@
-# OAK-D Pro PC Receivers
+# OAK-D Pro Quad Streaming System
 
 **Production-ready GStreamer receivers** with advanced real-time overlays for OAK-D Pro quad video streams.
 
@@ -14,20 +14,10 @@ Displays **RGB + Left + Right cameras + Depth stream simultaneously** with telem
 ./test_quad_advanced_overlay.sh
 ```
 
-**OR for legacy triple streams:**
+**OR automated startup:**
 ```bash
-# Complete triple setup
-./start_triple_advanced_overlay.sh
-```
-
-**Legacy triple streams (without depth):**
-```bash
-# Complete triple setup
-./start_triple_advanced_overlay.sh
-
-# OR step-by-step
-./start_triple.sh
-./test_triple_advanced_overlay.sh
+# Complete setup with automated Pi management
+./start_quad_advanced_overlay.sh
 ```
 
 ## Quick Setup
@@ -52,9 +42,7 @@ chmod +x *.sh
 ssh ivyspec@192.168.1.202
 cd /home/ivyspec/ivy_streamer
 source venv/bin/activate
-python quad_streamer.py  # All 4 streams including depth (WORKING)
-# OR
-python triple_streamer.py      # Legacy triple streams only
+python quad_streamer.py  # All 4 streams including depth
 ```
 
 **Quad Streamer Features:**
@@ -69,20 +57,17 @@ python triple_streamer.py      # Legacy triple streams only
 
 **Method 1: Automated Quad Streaming (Recommended)**
 ```bash
-# Smart quad startup with depth stream
-./start_quad.sh
-
-# Once Pi streams are ready, start PC receivers with depth
-./test_quad_advanced_overlay.sh
+# Complete setup with automated Pi management
+./start_quad_advanced_overlay.sh
 ```
 
-**Method 2: Legacy Triple Streaming**
+**Method 2: Manual Step-by-Step**
 ```bash
-# Smart startup script with automatic cleanup
-./start_triple.sh
+# Start Pi quad streamer
+./start_quad.sh
 
 # Once Pi streams are ready, start PC receivers
-./test_triple_advanced_overlay.sh
+./test_quad_advanced_overlay.sh
 ```
 
 **Method 3: Manual Pi Control**
@@ -96,7 +81,7 @@ sleep 12 && ./test_quad_advanced_overlay.sh
 
 **Method 4: Full Manual Setup**
 ```bash
-# 1. First verify Pi connectivity (including depth port)
+# 1. First verify Pi connectivity (all 4 ports)
 nc -zv 192.168.1.202 5000 5001 5002 5003
 
 # 2. If ports are closed, start Pi streamer (see Pi Side Setup above)
@@ -105,9 +90,9 @@ nc -zv 192.168.1.202 5000 5001 5002 5003
 ./test_quad_advanced_overlay.sh
 ```
 
-## Receiver Scripts
+## Video Display
 
-### Quad Streams with Depth (Recommended)
+### Quad Stream Receiver
 ```bash
 ./test_quad_advanced_overlay.sh
 ```
@@ -122,39 +107,15 @@ Shows:
 
 **Performance**: ~25fps RGB, ~12-15fps stereo cameras, ~30fps depth computation
 
-### Advanced Triple Overlays (Legacy)
-```bash
-./test_triple_advanced_overlay.sh
-```
-Shows:
-- **3 simultaneous streams**: RGB + Left + Right
-- Stream name and resolution (top left)
-- Current timestamp (top right)
-- Real-time FPS counter (bottom)
-- Status monitoring every 5 seconds
-
-### Basic Overlays
-```bash
-./test_triple_overlay.sh
-```
-Shows:
-- FPS counter only
-
-### Simple Receivers
-```bash
-./test_triple.sh
-```
-No overlays, minimal CPU usage
-
 ## Utility Scripts
 
 ### Pi Streamer Management
 ```bash
-# Start Pi streamer with automatic cleanup (RECOMMENDED)
-./start_triple.sh
+# Start Pi quad streamer with automatic cleanup (RECOMMENDED)
+./start_quad.sh
 
 # Stop Pi streamer
-./ssh_pi_robust.sh "pkill -f triple_streamer.py"
+./ssh_pi_robust.sh "pkill -f quad_streamer.py"
 ```
 
 ### SSH and Pi Management
@@ -166,7 +127,7 @@ No overlays, minimal CPU usage
 ./ssh_pi_robust.sh "command here"
 
 # Start Pi streamer manually (alternative method)
-./ssh_pi_robust.sh "cd /home/ivyspec/ivy_streamer && source venv/bin/activate && python triple_streamer.py"
+./ssh_pi_robust.sh "cd /home/ivyspec/ivy_streamer && source venv/bin/activate && python quad_streamer.py"
 
 # System diagnostics
 ./system_diagnostic.sh
@@ -175,26 +136,25 @@ No overlays, minimal CPU usage
 
 ## Network Requirements
 
-- Pi streaming on ports 5000, 5001, 5002
+- Pi streaming on ports 5000, 5001, 5002, 5003
 - Same network as Raspberry Pi
-- ~14 Mbps bandwidth for full resolution
-- GStreamer installed on PC
+- ~18 Mbps bandwidth for full resolution (4 streams)
+- GStreamer and OpenCV installed on PC
 
 ## Features
 
-- **Triple simultaneous streams**: RGB + Left + Right cameras
+- **Quad simultaneous streams**: RGB + Left + Right cameras + Depth
 - **Real-time overlays**: FPS, resolution, timestamp
+- **Depth visualization**: Stereo-computed depth maps
 - **Status monitoring**: Process health checking
-- **Flexible display**: Multiple overlay options
+- **Multithreaded performance**: 4 separate TCP servers
 - **Pi management**: SSH and remote control tools
 
 ## Files in this Repository
 
-- `start_triple_advanced_overlay.sh` - **Complete setup** - Pi streamer + PC receivers (ONE COMMAND)
-- `start_triple.sh` - **Smart Pi startup** with automatic cleanup (RECOMMENDED)
-- `test_triple_advanced_overlay.sh` - **Advanced receiver** with full telemetry overlays
-- `test_triple_overlay.sh` - **Basic receiver** with FPS overlay only
-- `test_triple.sh` - **Simple receiver** without overlays (minimal CPU)
+- `start_quad_advanced_overlay.sh` - **Complete setup** - Pi streamer + PC receivers (ONE COMMAND)
+- `start_quad.sh` - **Smart Pi startup** with automatic cleanup (RECOMMENDED)
+- `test_quad_advanced_overlay.sh` - **Quad receiver** with full telemetry overlays and depth
 - `ssh_pi_robust.sh` - Robust SSH connection script for Pi management
 - `system_diagnostic.sh` - Comprehensive system health check
 - `requirements.txt` - System dependencies list
@@ -203,11 +163,12 @@ No overlays, minimal CPU usage
 ## Advanced Features
 
 ### Real-time Overlays
-- **Stream identification**: RGB/Left/Right camera labels
+- **Stream identification**: RGB/Left/Right/Depth camera labels
 - **Resolution display**: Live resolution information
 - **FPS monitoring**: Real-time frames per second
 - **Timestamp overlay**: Current date and time
 - **Performance stats**: Rendered/dropped frame counts
+- **Depth visualization**: Grayscale depth maps with distance information
 
 ### Process Monitoring
 - **Health checking**: Automatic process status monitoring
@@ -215,25 +176,26 @@ No overlays, minimal CPU usage
 - **Recovery guidance**: Troubleshooting suggestions
 - **Resource usage**: CPU and memory monitoring
 
-### Multiple Display Modes
-- **Advanced mode**: Full telemetry (recommended)
-- **Basic mode**: FPS only (lower CPU usage)
-- **Simple mode**: No overlays (minimal resources)
+### Streaming Technology
+- **H.264 encoding**: RGB, Left, Right cameras (hardware accelerated)
+- **JPEG encoding**: Depth maps (optimized for real-time processing)
+- **TCP streaming**: Reliable multi-client support
+- **Multithreaded architecture**: 4 concurrent TCP servers
 
 ## Troubleshooting
 
 ### No Video Windows Appear
 ```bash
 # 1. Use the smart startup script (handles cleanup automatically)
-./start_triple.sh
+./start_quad.sh
 
 # 2. If that fails, check ports manually
-nc -zv 192.168.1.202 5000 5001 5002
+nc -zv 192.168.1.202 5000 5001 5002 5003
 
 # 3. If ports are closed, try manual cleanup and restart
-./ssh_pi_robust.sh "pkill -f triple_streamer.py"
+./ssh_pi_robust.sh "pkill -f quad_streamer.py"
 sleep 3
-./start_triple.sh
+./start_quad.sh
 
 # 4. Verify GStreamer installation
 gst-inspect-1.0 --version
@@ -243,9 +205,10 @@ gst-launch-1.0 tcpclientsrc host=192.168.1.202 port=5000 ! h264parse ! avdec_h26
 ```
 
 ### Poor Video Quality
-- **Network**: Use wired Ethernet instead of WiFi
-- **Bandwidth**: Reduce Pi streaming resolution/FPS
+- **Network**: Use wired Ethernet instead of WiFi (18+ Mbps required for 4 streams)
+- **Bandwidth**: Reduce Pi streaming resolution/FPS if needed
 - **CPU**: Close other applications consuming resources
+- **Depth stream**: If depth is slow, check OpenCV installation
 
 ### Audio Issues
 This system streams **video only**. Audio is not supported.
@@ -258,13 +221,15 @@ This system streams **video only**. Audio is not supported.
 ## System Requirements
 
 - **OS**: Ubuntu 20.04+ or Debian 11+
-- **CPU**: Multi-core recommended for 3 simultaneous streams
+- **CPU**: Multi-core recommended for 4 simultaneous streams
 - **RAM**: 4GB+ recommended
 - **Network**: 100 Mbps+ Ethernet (Gigabit preferred)
 - **Display**: Multiple monitor setup recommended
+- **Dependencies**: GStreamer, OpenCV, Python3
 
 ## Version History
 
-- **v1.0**: Initial release with advanced overlay support
-- Production-tested with multiple simultaneous streams
-- Optimized GStreamer pipelines for low latency
+- **v2.0**: Quad-stream system with depth support
+- **v1.0**: Initial triple-stream release
+- Production-tested with real-time depth computation
+- Optimized multithreaded architecture for 4 concurrent streams
