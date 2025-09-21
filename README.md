@@ -2,6 +2,29 @@
 
 Stream RGB + Stereo (Left + Right) video from Luxonis OAK-D Pro camera connected to Raspberry Pi 5 to PC over Ethernet.
 
+## Project Structure
+
+```
+ivy_streamer/
+├── pi_streamer/          # Raspberry Pi streaming code
+│   ├── triple_streamer.py    # Main streaming application
+│   ├── start_triple.sh       # Quick start script
+│   ├── requirements.txt      # Python dependencies
+│   └── README.md            # Pi setup instructions
+├── pc_receivers/         # PC receiver applications
+│   ├── test_triple*.sh       # GStreamer receiver scripts
+│   ├── requirements.txt      # System dependencies
+│   └── README.md            # PC setup instructions
+├── scripts/              # Utility scripts
+│   ├── ssh_pi_robust.sh      # SSH connection script
+│   ├── system_diagnostic.sh  # System health check
+│   └── README.md            # Script documentation
+└── docs/                 # Documentation
+    ├── FUTURE_SELF_GUIDE.md  # Quick reference
+    ├── GITHUB_SETUP.md       # Git setup guide
+    └── Issues_To_Avoid       # Troubleshooting notes
+```
+
 ## Architecture
 
 - **Protocol**: H.264 encoded video over TCP sockets

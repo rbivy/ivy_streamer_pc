@@ -3,12 +3,16 @@ __pycache__/
 *.py[cod]
 *$py.class
 *.so
+*.egg-info/
 
-# Virtual Environment
+# Virtual Environments (platform-specific, never commit)
 venv/
 env/
 ENV/
 .venv/
+.env/
+**/venv/
+**/env/
 
 # IDE
 .vscode/
@@ -16,17 +20,25 @@ ENV/
 *.swp
 *.swo
 *~
-
-# Logs
-*.log
-
-# OS
 .DS_Store
-Thumbs.db
 
-# Temporary files
+# Logs and temp files
+*.log
 *.tmp
 *.bak
 
-# Credentials (if any)
+# OS generated files
+Thumbs.db
+.directory
+
+# Git credentials
+.git-credentials
+
+# Local configuration
+config.local.py
 .env
+*.local
+
+# Build artifacts
+build/
+dist/
