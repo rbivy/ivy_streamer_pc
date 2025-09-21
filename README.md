@@ -4,10 +4,25 @@
 
 Displays **RGB + Left + Right cameras simultaneously** with telemetry, FPS, timestamps, and monitoring.
 
-## Quick Setup
+## ⚡ Quick Start (TL;DR)
 
 ```bash
-# 1. Clone this repository (PC only)
+# 1. Start Pi streamer (from PC)
+sshpass -p "ivyspec" ssh -o StrictHostKeyChecking=no ivyspec@192.168.1.202 \
+  "cd /home/ivyspec/ivy_streamer && source venv/bin/activate && python triple_streamer.py" &
+
+# 2. Wait for Pi initialization
+sleep 10
+
+# 3. Start PC video receivers
+./test_triple_advanced_overlay.sh
+```
+
+## Quick Setup
+
+### PC Side (This Repository)
+```bash
+# 1. Clone this repository
 git clone https://github.com/rbivy/ivy_streamer_pc.git
 cd ivy_streamer_pc
 
@@ -16,11 +31,38 @@ sudo apt install gstreamer1.0-tools gstreamer1.0-plugins-base gstreamer1.0-plugi
 
 # 3. Make scripts executable
 chmod +x *.sh
+```
 
-# 4. Ensure Pi is streaming (from Pi repository)
-# Pi should be running: python triple_streamer.py
+### Pi Side Setup (Required First)
+```bash
+# Pi repository: https://github.com/rbivy/ivy_streamer_pi
+# SSH to Pi and start the streamer using the virtual environment
+ssh ivyspec@192.168.1.202
+cd /home/ivyspec/ivy_streamer
+source venv/bin/activate
+python triple_streamer.py
+```
 
-# 5. Start advanced receivers with overlays
+### Start Video Streaming
+
+**Method 1: Start Pi from PC (Recommended)**
+```bash
+# From PC - automatically starts Pi streamer via SSH
+sshpass -p "ivyspec" ssh -o StrictHostKeyChecking=no ivyspec@192.168.1.202 \
+  "cd /home/ivyspec/ivy_streamer && source venv/bin/activate && python triple_streamer.py" &
+
+# Wait 5-10 seconds for Pi to initialize, then start PC receiver
+./test_triple_advanced_overlay.sh
+```
+
+**Method 2: Manual Steps**
+```bash
+# 1. First verify Pi connectivity
+nc -zv 192.168.1.202 5000 5001 5002
+
+# 2. If ports are closed, start Pi streamer (see Pi Side Setup above)
+
+# 3. Once Pi ports are open, start PC receiver
 ./test_triple_advanced_overlay.sh
 ```
 
@@ -53,11 +95,14 @@ No overlays, minimal CPU usage
 
 ### SSH and Pi Management
 ```bash
-# Connect to Pi
+# Connect to Pi interactively
 ./ssh_pi_robust.sh
 
 # Run command on Pi
 ./ssh_pi_robust.sh "command here"
+
+# Start Pi streamer remotely (alternative method)
+./ssh_pi_robust.sh "cd /home/ivyspec/ivy_streamer && source venv/bin/activate && python triple_streamer.py"
 
 # System diagnostics
 ./system_diagnostic.sh
@@ -113,14 +158,21 @@ No overlays, minimal CPU usage
 
 ### No Video Windows Appear
 ```bash
-# Check if Pi is streaming
-nc -zv <PI_IP> 5000 5001 5002
+# 1. Check if Pi is streaming (should show "succeeded" for all ports)
+nc -zv 192.168.1.202 5000 5001 5002
 
-# Verify GStreamer installation
+# 2. If ports are closed, start Pi streamer first
+sshpass -p "ivyspec" ssh -o StrictHostKeyChecking=no ivyspec@192.168.1.202 \
+  "cd /home/ivyspec/ivy_streamer && source venv/bin/activate && python triple_streamer.py" &
+
+# 3. Wait 10 seconds, then check ports again
+sleep 10 && nc -zv 192.168.1.202 5000 5001 5002
+
+# 4. Verify GStreamer installation
 gst-inspect-1.0 --version
 
-# Test individual stream
-gst-launch-1.0 tcpclientsrc host=<PI_IP> port=5000 ! h264parse ! avdec_h264 ! videoconvert ! autovideosink
+# 5. Test individual stream
+gst-launch-1.0 tcpclientsrc host=192.168.1.202 port=5000 ! h264parse ! avdec_h264 ! videoconvert ! autovideosink
 ```
 
 ### Poor Video Quality
