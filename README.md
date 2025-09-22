@@ -49,10 +49,12 @@ python quad_streamer_with_imu.py  # All 4 video streams + IMU data
 ## Streaming Features
 
 **Video Streams:**
-- **RGB**: 1280x720 @ 30fps (H.264, 8Mbps) - Port 5000
+- **RGB**: 1280x720 @ 30fps (H.264, 8Mbps) - Port 5000 *
 - **Left Mono**: 1280x720 @ 30fps (H.264, 3Mbps) - Port 5001
 - **Right Mono**: 1280x720 @ 30fps (H.264, 3Mbps) - Port 5002
 - **Depth**: 1280x720 @ 30fps (JPEG-encoded) - Port 5003
+
+**Note:** *RGB camera uses IMX378 sensor with 1080p native resolution that crops to 720p output. For SLAM applications requiring matched field-of-view, consider this limitation when calibrating stereo pairs.
 
 **IMU Data Stream:**
 - **IMU**: Accelerometer + Gyroscope @ 100Hz (UDP JSON) - Port 5004
@@ -252,6 +254,10 @@ sleep 3
 
 ## Version History
 
+- **v3.1**: RGB field-of-view optimization and documentation updates
+  - Investigated RGB camera scaling limitations (IMX378 sensor constraints)
+  - Documented RGB vs mono camera field-of-view differences for SLAM
+  - Improved software scaling implementation with OpenCV
 - **v3.0**: Quad-stream system with IMU sensor data integration
 - **v2.0**: Quad-stream system with depth support
 - **v1.0**: Initial triple-stream release

@@ -74,4 +74,4 @@ cleanup() {
 trap cleanup SIGINT SIGTERM
 
 # Start the PC receivers with IMU
-./test_quad_advanced_overlay_with_imu.sh
+./test_quad_with_imu.sh
