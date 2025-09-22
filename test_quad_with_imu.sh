@@ -1,16 +1,18 @@
 #!/bin/bash
-# Advanced quad stream test with JPEG depth stream
+# Advanced quad stream test with JPEG depth stream and IMU data
+# Launches 5 windows: RGB, Left, Right, Depth (video), and IMU (data terminal)
 
 PI_IP="192.168.1.202"
 
 echo "========================================="
-echo "  Advanced Quad Streams with Depth"
+echo "  Advanced Quad Streams with Depth + IMU"
 echo "========================================="
-echo "Starting 4 video windows:"
+echo "Starting 5 windows:"
 echo "  RGB:   Port 5000 (1280x720 @ 30fps) - H.264"
 echo "  Left:  Port 5001 (1280x720 @ 30fps) - H.264"
 echo "  Right: Port 5002 (1280x720 @ 30fps) - H.264"
 echo "  Depth: Port 5003 (1280x720 @ 30fps) - JPEG"
+echo "  IMU:   Port 5004 (100Hz) - UDP JSON data"
 echo ""
 
 # RGB Stream (H.264)
@@ -120,17 +122,27 @@ receive_depth_stream()
 " &
 DEPTH_PID=$!
 
+sleep 2
+
+# IMU Data Stream (UDP)
+echo "Starting IMU data receiver window..."
+# Launch IMU receiver in GUI window (doesn't need terminal)
+python3 launch_imu_window.py &
+IMU_PID=$!
+
 echo ""
-echo "All four receivers started!"
+echo "All five receivers started!"
 echo "RGB PID:   $RGB_PID"
 echo "Left PID:  $LEFT_PID"
 echo "Right PID: $RIGHT_PID"
 echo "Depth PID: $DEPTH_PID"
+echo "IMU Terminal PID: $IMU_PID"
 echo ""
-echo "RGB, Left, Right: H.264 streams with GStreamer overlays"
-echo "Depth: JPEG stream with OpenCV display"
+echo "Video streams: RGB, Left, Right - H.264 with GStreamer overlays"
+echo "Depth stream: JPEG with OpenCV display"
+echo "IMU data: Real-time sensor data in terminal window"
 echo ""
-echo "Press Ctrl+C or close any video window to stop all receivers and Pi processes"
+echo "Press Ctrl+C or close any window to stop all receivers and Pi processes"
 
 # Enhanced cleanup function - stops both PC receivers and Pi processes
 cleanup() {
@@ -146,9 +158,13 @@ cleanup() {
     echo "Stopping PC receivers..."
     kill $RGB_PID $LEFT_PID $RIGHT_PID $DEPTH_PID 2>/dev/null || true
 
-    # Stop Pi quad streamer processes
-    echo "Stopping Pi quad streamer..."
+    # Kill IMU terminal
+    pkill -f "imu_receiver.py" 2>/dev/null || true
+
+    # Stop Pi quad streamer processes (both old and new with IMU)
+    echo "Stopping Pi quad streamer with IMU..."
     ./ssh_pi_robust.sh "pkill -f quad_streamer.py" 2>/dev/null || true
+    ./ssh_pi_robust.sh "pkill -f quad_streamer_with_imu.py" 2>/dev/null || true
 
     echo "All receivers and Pi processes stopped"
 }
