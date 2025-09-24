@@ -1,8 +1,19 @@
-# OAK-D Pro Quad Streaming System with IMU & Point Cloud
+# OAK-D Pro Clean Streaming System with Ethernet & Network Monitoring
 
-**Production-ready multi-stream receivers** with advanced real-time overlays for OAK-D Pro quad video streams **+ IMU data + 3D Point Cloud**.
+**Streamlined multi-stream receivers** with clean video feeds optimized for SLAM/computer vision processing. Features **RGB + Left + Right cameras + Depth stream + IMU sensor data + real-time network monitoring**.
 
-Displays **RGB + Left + Right cameras + Depth stream + IMU sensor data + Point Cloud visualization simultaneously** with telemetry, FPS, timestamps, and 3D rendering.
+Displays **quad video streams without overlays + IMU data + dual interface bandwidth monitoring** over **ethernet connection** for optimal performance (14+ Mbps verified).
+
+## 🌐 Network Configuration
+
+The system uses **ethernet-first architecture** for optimal streaming performance:
+
+- **Pi Ethernet**: 192.168.1.201 (streaming interface)
+- **Pi WiFi**: 192.168.1.202 (control/SSH access)
+- **PC Ethernet**: 192.168.1.50
+- **PC WiFi**: 192.168.1.233
+
+**Bandwidth Verification**: ~14+ Mbps streaming via ethernet, <0.1 Mbps via WiFi (control only)
 
 ## ⚡ Quick Start (TL;DR)
 
@@ -10,8 +21,8 @@ Displays **RGB + Left + Right cameras + Depth stream + IMU sensor data + Point C
 # Install dependencies
 pip3 install -r requirements.txt
 
-# Complete setup with all features (RECOMMENDED)
-./start_quad_with_imu_pointcloud.sh
+# Complete setup with clean video + IMU + network monitoring (RECOMMENDED)
+./start_quad_with_imu.sh
 ```
 
 **OR without Point Cloud:**
