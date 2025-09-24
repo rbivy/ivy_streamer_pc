@@ -73,5 +73,5 @@ cleanup() {
 
 trap cleanup SIGINT SIGTERM
 
-# Start the PC receivers with IMU
+# Start the PC receivers with IMU (clean version with ethernet)
 ./test_quad_with_imu.sh

@@ -1,9 +1,22 @@
-# PC side - uses system GStreamer, no Python dependencies needed
-# Requirements:
+# PC side requirements
+
+## System packages (install with apt):
 # - gstreamer1.0-tools
 # - gstreamer1.0-plugins-base
 # - gstreamer1.0-plugins-good
 # - gstreamer1.0-plugins-bad
+# - python3-tk
 
 # Install on Ubuntu/Debian:
-# sudo apt install gstreamer1.0-tools gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-plugins-bad
+# sudo apt install gstreamer1.0-tools gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-plugins-bad python3-tk
+
+## Python packages (install with pip):
+opencv-python
+numpy
+pyzmq
+msgpack
+msgpack-numpy
+open3d
+
+# Install Python deps:
+# pip3 install opencv-python numpy pyzmq msgpack msgpack-numpy open3d

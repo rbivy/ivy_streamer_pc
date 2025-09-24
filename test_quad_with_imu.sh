@@ -1,79 +1,64 @@
 #!/bin/bash
-# Advanced quad stream test with JPEG depth stream and IMU data
-# Launches 5 windows: RGB, Left, Right, Depth (video), and IMU (data terminal)
+# Clean quad stream test without video overlays + dedicated stats window
+# Launches 6 windows: RGB, Left, Right, Depth (clean video), IMU data, and Stats monitor
 
-PI_IP="192.168.1.202"
+PI_IP="192.168.1.201"  # Pi ethernet IP
 
 echo "========================================="
-echo "  Advanced Quad Streams with Depth + IMU"
+echo "  Clean Quad Streams + Dual Interface Monitor"
 echo "========================================="
-echo "Starting 5 windows:"
-echo "  RGB:   Port 5000 (1280x720 @ 30fps) - H.264"
-echo "  Left:  Port 5001 (1280x720 @ 30fps) - H.264"
-echo "  Right: Port 5002 (1280x720 @ 30fps) - H.264"
-echo "  Depth: Port 5003 (1280x720 @ 30fps) - JPEG"
+echo "Starting 6 windows:"
+echo "  RGB:   Port 5000 (1280x720 @ 30fps) - H.264 (clean)"
+echo "  Left:  Port 5001 (1280x720 @ 30fps) - H.264 (clean)"
+echo "  Right: Port 5002 (1280x720 @ 30fps) - H.264 (clean)"
+echo "  Depth: Port 5003 (1280x720 @ 30fps) - JPEG (clean)"
 echo "  IMU:   Port 5004 (100Hz) - UDP JSON data"
+echo "  Stats: Dual interface monitor (ethernet + WiFi)"
 echo ""
 
-# RGB Stream (H.264)
+# RGB Stream (H.264) - Clean, no overlays
 echo "Starting RGB receiver..."
 gst-launch-1.0 -v \
     tcpclientsrc host="$PI_IP" port=5000 ! \
     h264parse ! \
     avdec_h264 ! \
     videoconvert ! \
-    clockoverlay halignment=right valignment=top font-desc="Sans, 10" \
-        time-format="%D %H:%M:%S" ! \
-    textoverlay text="RGB Stream | 1280x720 @ 30fps | Port 5000" \
-        valignment=top halignment=left font-desc="Sans Bold, 12" \
-        shaded-background=true ! \
-    fpsdisplaysink text-overlay=true video-sink=autovideosink sync=false &
+    autovideosink sync=false &
 RGB_PID=$!
 
 sleep 2
 
-# Left Stream (H.264)
+# Left Stream (H.264) - Clean, no overlays
 echo "Starting Left camera receiver..."
 gst-launch-1.0 -v \
     tcpclientsrc host="$PI_IP" port=5001 ! \
     h264parse ! \
     avdec_h264 ! \
     videoconvert ! \
-    clockoverlay halignment=right valignment=top font-desc="Sans, 10" \
-        time-format="%D %H:%M:%S" ! \
-    textoverlay text="Left Camera | 1280x720 @ 30fps | Port 5001" \
-        valignment=top halignment=left font-desc="Sans Bold, 12" \
-        shaded-background=true ! \
-    fpsdisplaysink text-overlay=true video-sink=autovideosink sync=false &
+    autovideosink sync=false &
 LEFT_PID=$!
 
 sleep 2
 
-# Right Stream (H.264)
+# Right Stream (H.264) - Clean, no overlays
 echo "Starting Right camera receiver..."
 gst-launch-1.0 -v \
     tcpclientsrc host="$PI_IP" port=5002 ! \
     h264parse ! \
     avdec_h264 ! \
     videoconvert ! \
-    clockoverlay halignment=right valignment=top font-desc="Sans, 10" \
-        time-format="%D %H:%M:%S" ! \
-    textoverlay text="Right Camera | 1280x720 @ 30fps | Port 5002" \
-        valignment=top halignment=left font-desc="Sans Bold, 12" \
-        shaded-background=true ! \
-    fpsdisplaysink text-overlay=true video-sink=autovideosink sync=false &
+    autovideosink sync=false &
 RIGHT_PID=$!
 
 sleep 2
 
-# Depth Stream (JPEG)
+# Depth Stream (JPEG) - Clean, no overlays
 echo "Starting Depth receiver..."
 python3 -c "
 import socket
 import cv2
 import numpy as np
 import struct
-import time
 
 def receive_depth_stream():
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -97,17 +82,11 @@ def receive_depth_stream():
                 frame_data += chunk
 
             if len(frame_data) == frame_size:
-                # Decode JPEG
+                # Decode JPEG - clean display
                 img_array = np.frombuffer(frame_data, np.uint8)
                 depth_img = cv2.imdecode(img_array, cv2.IMREAD_GRAYSCALE)
 
                 if depth_img is not None:
-                    # Add text overlay
-                    cv2.putText(depth_img, 'Depth Stream | 1280x720 @ 30fps | Port 5003',
-                               (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.7, 255, 2)
-                    cv2.putText(depth_img, time.strftime('%m/%d/%Y %H:%M:%S'),
-                               (depth_img.shape[1]-200, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.5, 255, 1)
-
                     cv2.imshow('Depth Stream', depth_img)
                     if cv2.waitKey(1) & 0xFF == ord('q'):
                         break
@@ -126,21 +105,27 @@ sleep 2
 
 # IMU Data Stream (UDP)
 echo "Starting IMU data receiver window..."
-# Launch IMU receiver in GUI window (doesn't need terminal)
 python3 launch_imu_window.py &
 IMU_PID=$!
 
+sleep 2
+
+# Stats Monitor - Dual interface monitoring (ethernet + WiFi)
+echo "Starting dual interface bandwidth monitor GUI..."
+python3 dual_interface_monitor.py &
+STATS_PID=$!
+
 echo ""
-echo "All five receivers started!"
+echo "All six receivers started!"
 echo "RGB PID:   $RGB_PID"
 echo "Left PID:  $LEFT_PID"
 echo "Right PID: $RIGHT_PID"
 echo "Depth PID: $DEPTH_PID"
-echo "IMU Terminal PID: $IMU_PID"
+echo "IMU PID: $IMU_PID"
+echo "Stats PID: $STATS_PID"
 echo ""
-echo "Video streams: RGB, Left, Right - H.264 with GStreamer overlays"
-echo "Depth stream: JPEG with OpenCV display"
-echo "IMU data: Real-time sensor data in terminal window"
+echo "Video streams: Clean video without overlays for SLAM processing"
+echo "Stats window: Comprehensive bandwidth and performance monitoring"
 echo ""
 echo "Press Ctrl+C or close any window to stop all receivers and Pi processes"
 
@@ -156,12 +141,13 @@ cleanup() {
 
     # Stop PC receivers
     echo "Stopping PC receivers..."
-    kill $RGB_PID $LEFT_PID $RIGHT_PID $DEPTH_PID 2>/dev/null || true
+    kill $RGB_PID $LEFT_PID $RIGHT_PID $DEPTH_PID $STATS_PID 2>/dev/null || true
 
-    # Kill IMU terminal
-    pkill -f "imu_receiver.py" 2>/dev/null || true
+    # Kill IMU and stats processes
+    pkill -f "launch_imu_window.py" 2>/dev/null || true
+    pkill -f "dual_interface_monitor.py" 2>/dev/null || true
 
-    # Stop Pi quad streamer processes (both old and new with IMU)
+    # Stop Pi quad streamer processes
     echo "Stopping Pi quad streamer with IMU..."
     ./ssh_pi_robust.sh "pkill -f quad_streamer.py" 2>/dev/null || true
     ./ssh_pi_robust.sh "pkill -f quad_streamer_with_imu.py" 2>/dev/null || true
