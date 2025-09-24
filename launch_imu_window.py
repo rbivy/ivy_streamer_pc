@@ -30,7 +30,7 @@ class IMUWindow:
         title_label.pack(pady=(0, 10))
 
         # Status label
-        self.status_label = tk.Label(main_frame, text="Connecting to 192.168.1.202:5004...",
+        self.status_label = tk.Label(main_frame, text="Connecting to 192.168.1.201:5004...",
                                    font=('Courier', 12), fg='yellow', bg='black')
         self.status_label.pack(pady=(0, 10))
 
@@ -63,7 +63,7 @@ class IMUWindow:
             sock.settimeout(1.0)
 
             # Send registration message
-            sock.sendto(b'REGISTER_IMU', ('192.168.1.202', 5004))
+            sock.sendto(b'REGISTER_IMU', ('192.168.1.201', 5004))
 
             # Wait for acknowledgment
             try:

@@ -13,7 +13,7 @@ from datetime import datetime
 from collections import deque
 
 class IMUReceiver:
-    def __init__(self, pi_ip='192.168.1.202', port=5004):
+    def __init__(self, pi_ip='192.168.1.201', port=5004):
         self.pi_ip = pi_ip
         self.port = port
         self.running = False

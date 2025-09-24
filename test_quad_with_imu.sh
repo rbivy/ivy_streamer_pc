@@ -21,8 +21,10 @@ echo "Starting RGB receiver..."
 gst-launch-1.0 -v \
     tcpclientsrc host="$PI_IP" port=5000 ! \
     h264parse ! \
-    avdec_h264 ! \
+    avdec_h264 max-threads=1 ! \
     videoconvert ! \
+    videoscale ! \
+    "video/x-raw,width=1280,height=720" ! \
     autovideosink sync=false &
 RGB_PID=$!
 
@@ -33,7 +35,7 @@ echo "Starting Left camera receiver..."
 gst-launch-1.0 -v \
     tcpclientsrc host="$PI_IP" port=5001 ! \
     h264parse ! \
-    avdec_h264 ! \
+    avdec_h264 max-threads=1 ! \
     videoconvert ! \
     autovideosink sync=false &
 LEFT_PID=$!
@@ -45,7 +47,7 @@ echo "Starting Right camera receiver..."
 gst-launch-1.0 -v \
     tcpclientsrc host="$PI_IP" port=5002 ! \
     h264parse ! \
-    avdec_h264 ! \
+    avdec_h264 max-threads=1 ! \
     videoconvert ! \
     autovideosink sync=false &
 RIGHT_PID=$!
@@ -127,17 +129,12 @@ echo ""
 echo "Video streams: Clean video without overlays for SLAM processing"
 echo "Stats window: Comprehensive bandwidth and performance monitoring"
 echo ""
-echo "Press Ctrl+C or close any window to stop all receivers and Pi processes"
+echo "Press Ctrl+C to stop all receivers and Pi processes"
 
 # Enhanced cleanup function - stops both PC receivers and Pi processes
 cleanup() {
     echo ""
     echo "Stopping all streams..."
-
-    # Stop monitor process if running
-    if [ ! -z "$MONITOR_PID" ]; then
-        kill $MONITOR_PID 2>/dev/null || true
-    fi
 
     # Stop PC receivers
     echo "Stopping PC receivers..."
@@ -157,22 +154,11 @@ cleanup() {
 
 trap cleanup SIGINT SIGTERM
 
-# Monitor processes and cleanup when any exit
-monitor_processes() {
-    while true; do
-        # Check if any of the main processes have exited
-        if ! kill -0 $RGB_PID 2>/dev/null || ! kill -0 $LEFT_PID 2>/dev/null || ! kill -0 $RIGHT_PID 2>/dev/null || ! kill -0 $DEPTH_PID 2>/dev/null; then
-            echo ""
-            echo "Video window closed or process exited. Cleaning up..."
-            cleanup
-            exit 0
-        fi
-        sleep 1
-    done
-}
+# Wait for user to terminate with Ctrl+C (no auto-monitoring)
+echo "All processes running. Press Ctrl+C to stop all streams when ready."
+echo ""
 
-# Start monitoring in background and wait for processes
-monitor_processes &
-MONITOR_PID=$!
-
+# Wait indefinitely - user controls when to stop
+# Also add EXIT trap to ensure cleanup on script termination
+trap 'cleanup; exit 0' EXIT
 wait
