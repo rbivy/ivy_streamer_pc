@@ -47,6 +47,26 @@ chmod +x *.sh *.py
 ```
 
 ### Pi Side Setup (Required First)
+
+**IMPORTANT: Pi Ethernet Configuration**
+The Pi must have ethernet configured at 192.168.1.201. If not already configured:
+```bash
+# On Debian 12 (Bookworm) systems, create systemd-networkd config:
+sudo tee /etc/systemd/network/10-eth0-static.network << 'EOF'
+[Match]
+Name=eth0
+
+[Network]
+Address=192.168.1.201/24
+Gateway=192.168.1.1
+DNS=192.168.1.1
+DNS=8.8.8.8
+EOF
+
+sudo systemctl enable systemd-networkd
+sudo systemctl restart systemd-networkd
+```
+
 ```bash
 # Pi repository: https://github.com/rbivy/ivy_streamer_pi
 # SSH to Pi and start the streamer using the virtual environment
