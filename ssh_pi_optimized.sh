@@ -30,9 +30,25 @@ check_pi_connection() {
 execute_ssh() {
     local max_retries=2
     local retry_count=0
+    local ssh_result
 
     while [ $retry_count -lt $max_retries ]; do
-        if ssh -o ConnectTimeout=5 pi "cd $PROJECT_DIR 2>/dev/null; $*" 2>/dev/null; then
+        # Test SSH connectivity first
+        if ! ssh -o ConnectTimeout=3 pi "exit" 2>/dev/null; then
+            retry_count=$((retry_count + 1))
+            if [ $retry_count -lt $max_retries ]; then
+                print_warning "SSH attempt $retry_count failed, retrying..."
+                sleep 0.5
+            fi
+            continue
+        fi
+
+        # SSH is connected, execute command (ignore command exit codes for pkill, etc.)
+        ssh -o ConnectTimeout=5 pi "cd $PROJECT_DIR 2>/dev/null || true; $*" 2>/dev/null
+        ssh_result=$?
+
+        # For pkill commands, success means SSH worked (ignore if no processes found)
+        if [[ "$*" =~ pkill ]] || [ $ssh_result -eq 0 ]; then
             return 0
         fi
 
