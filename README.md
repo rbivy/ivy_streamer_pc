@@ -21,9 +21,15 @@ The system uses **ethernet-first architecture** for optimal streaming performanc
 # Install dependencies
 pip3 install -r requirements.txt
 
-# Complete setup with clean video + IMU + network monitoring (RECOMMENDED)
+# Complete setup with clean video + IMU + real-time FPS monitoring (RECOMMENDED)
 ./start_quad_with_imu_optimized.sh
 ```
+
+### 🎯 Key Features
+- **Real-time FPS monitoring** for all video streams
+- **Optimized video latency** via aggressive buffering
+- **Stable 30 FPS** hard limits on all streams
+- **Network bandwidth monitoring** with stream statistics
 
 
 ## Quick Setup
@@ -203,7 +209,8 @@ ssh pi
 
 ### Main Scripts
 - `start_quad_with_imu_optimized.sh` - **Complete setup** - Automated Pi streamer + PC receivers (fast SSH)
-- `test_quad_with_imu.sh` - **PC receivers only** - 5 windows (RGB + Left + Right + Depth + IMU)
+- `test_quad_with_imu.sh` - **PC receivers only** - 6 windows (RGB + Left + Right + Depth + IMU + FPS Monitor)
+- `dual_interface_monitor.py` - **Enhanced network & FPS monitor** - Real-time bandwidth and stream FPS tracking
 
 ### Data Receivers
 - `imu_receiver.py` - **IMU data receiver** - Terminal-based IMU display
@@ -314,7 +321,12 @@ The system now uses **optimized SSH key authentication** for faster Pi communica
 
 ## Version History
 
-- **v4.1**: SSH optimization with key-based authentication (CURRENT)
+- **v5.0**: Real-time FPS monitoring and performance optimization (CURRENT)
+  - Added real-time FPS tracking for all video streams
+  - Implemented aggressive buffering for reduced latency
+  - Fixed connection explosion issue causing quality degradation
+  - Enforced 30 FPS hard limits across all streams
+- **v4.1**: SSH optimization with key-based authentication
 - **v4.0**: Clean streaming system with ethernet optimization
 - **v3.1**: RGB field-of-view optimization and documentation updates
   - Investigated RGB camera scaling limitations (IMX378 sensor constraints)
