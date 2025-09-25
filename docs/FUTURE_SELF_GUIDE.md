@@ -86,11 +86,11 @@ gst-inspect-1.0 --version
 # Test connectivity
 ping -c 1 192.168.1.202
 
-# Interactive SSH session
-./ssh_pi_robust.sh
+# Interactive SSH session (fast key auth)
+ssh pi
 
-# Run command on Pi
-./ssh_pi_robust.sh "command here"
+# Run command on Pi (optimized)
+./ssh_pi_optimized.sh "command here"
 ```
 
 ## File Structure Reference
@@ -100,7 +100,7 @@ ivy_streamer/ (PC SIDE - THIS REPO)
 ├── start_quad_advanced_overlay.sh    # Complete one-command setup
 ├── start_quad.sh                     # Smart Pi startup with cleanup
 ├── test_quad_advanced_overlay.sh     # PC receivers with overlays and depth
-├── ssh_pi_robust.sh                  # Robust SSH connection
+├── ssh_pi_optimized.sh               # Optimized SSH connection (key-based auth)
 ├── system_diagnostic.sh              # System diagnostics
 ├── requirements.txt                  # GStreamer system packages
 ├── README.md                         # Main documentation
@@ -139,8 +139,8 @@ ivy_streamer/ (PC SIDE - THIS REPO)
 If everything breaks:
 
 ```bash
-# Kill all Pi streamers
-./ssh_pi_robust.sh "pkill -f quad_streamer.py"
+# Kill all Pi streamers (optimized SSH)
+./ssh_pi_optimized.sh "pkill -f quad_streamer.py"
 
 # Complete restart
 ./start_quad_advanced_overlay.sh
@@ -148,12 +148,12 @@ If everything breaks:
 # System diagnostics
 ./system_diagnostic.sh
 
-# Manual Pi check
-./ssh_pi_robust.sh "lsusb | grep Movidius"  # Check camera
+# Manual Pi check (optimized SSH)
+./ssh_pi_optimized.sh "lsusb | grep Movidius"  # Check camera
 nc -zv 192.168.1.202 5000 5001 5002 5003    # Check ports
 
-# Force kill Pi processes if needed
-./ssh_pi_robust.sh "sudo fuser -k 5000/tcp 5001/tcp 5002/tcp 5003/tcp"
+# Force kill Pi processes if needed (optimized SSH)
+./ssh_pi_optimized.sh "sudo fuser -k 5000/tcp 5001/tcp 5002/tcp 5003/tcp"
 ```
 
 ## Repository Architecture

@@ -146,8 +146,8 @@ cleanup() {
 
     # Stop Pi quad streamer processes
     echo "Stopping Pi quad streamer with IMU..."
-    ./ssh_pi_robust.sh "pkill -f quad_streamer.py" 2>/dev/null || true
-    ./ssh_pi_robust.sh "pkill -f quad_streamer_with_imu.py" 2>/dev/null || true
+    ./ssh_pi_optimized.sh "pkill -f quad_streamer.py" 2>/dev/null || true
+    ./ssh_pi_optimized.sh "pkill -f quad_streamer_with_imu.py" 2>/dev/null || true
 
     echo "All receivers and Pi processes stopped"
 }
