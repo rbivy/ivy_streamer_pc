@@ -177,7 +177,8 @@ DUAL INTERFACE BANDWIDTH MONITOR
             display_text += f"\nNETWORK CONFIGURATION:\n"
             display_text += f"Ethernet (eno2): 192.168.1.50/24\n"
             display_text += f"WiFi (wlo1):     192.168.1.233/24\n"
-            display_text += f"Pi Target:       192.168.1.202\n"
+            display_text += f"Pi SSH (WiFi):   192.168.1.202\n"
+            display_text += f"Pi Stream (Eth): 192.168.1.201\n"
 
             display_text += f"\n{'='*70}\n"
             display_text += "Monitoring both interfaces every 2 seconds\n"

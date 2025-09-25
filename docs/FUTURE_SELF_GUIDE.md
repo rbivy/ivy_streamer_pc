@@ -3,10 +3,13 @@
 ## CRITICAL INFORMATION - PC-ONLY GSTREAMER ARCHITECTURE
 
 ### Pi Connection Details
-- **IP Address**: 192.168.1.202
+- **WiFi IP** (SSH/Control): 192.168.1.202
+- **Ethernet IP** (Streaming): 192.168.1.201
 - **Username**: ivyspec
 - **Password**: ivyspec
 - **SSH Port**: 22 (default)
+
+**Important**: Use WiFi IP (192.168.1.202) for SSH connections, Ethernet IP (192.168.1.201) for video streaming.
 
 ### IMPORTANT: PC-ONLY ARCHITECTURE
 
@@ -48,14 +51,14 @@ python quad_streamer.py
 
 ### 3. Individual Stream Access
 ```bash
-# RGB stream (1280x720 @ 30fps)
-gst-launch-1.0 tcpclientsrc host=192.168.1.202 port=5000 ! h264parse ! avdec_h264 ! videoconvert ! autovideosink sync=false
+# RGB stream (1280x720 @ 30fps) - use ethernet IP for streaming
+gst-launch-1.0 tcpclientsrc host=192.168.1.201 port=5000 ! h264parse ! avdec_h264 ! videoconvert ! autovideosink sync=false
 
 # Left camera (1280x720 @ 30fps)
-gst-launch-1.0 tcpclientsrc host=192.168.1.202 port=5001 ! h264parse ! avdec_h264 ! videoconvert ! autovideosink sync=false
+gst-launch-1.0 tcpclientsrc host=192.168.1.201 port=5001 ! h264parse ! avdec_h264 ! videoconvert ! autovideosink sync=false
 
 # Right camera (1280x720 @ 30fps)
-gst-launch-1.0 tcpclientsrc host=192.168.1.202 port=5002 ! h264parse ! avdec_h264 ! videoconvert ! autovideosink sync=false
+gst-launch-1.0 tcpclientsrc host=192.168.1.201 port=5002 ! h264parse ! avdec_h264 ! videoconvert ! autovideosink sync=false
 
 # Depth stream (1280x720 @ 30fps)
 # Handled by Python OpenCV receiver in the main script
@@ -69,7 +72,7 @@ gst-launch-1.0 tcpclientsrc host=192.168.1.202 port=5002 ! h264parse ! avdec_h26
 ./start_quad.sh
 
 # Manual check if needed
-nc -zv 192.168.1.202 5000 5001 5002 5003
+nc -zv 192.168.1.201 5000 5001 5002 5003  # Use ethernet IP for streaming ports
 ```
 
 ### 2. "No video windows appear"
@@ -84,7 +87,8 @@ gst-inspect-1.0 --version
 ### 3. SSH connection issues
 ```bash
 # Test connectivity
-ping -c 1 192.168.1.202
+ping -c 1 192.168.1.202  # SSH/control via WiFi
+ping -c 1 192.168.1.201  # Streaming via ethernet
 
 # Interactive SSH session (fast key auth)
 ssh pi
@@ -150,7 +154,7 @@ If everything breaks:
 
 # Manual Pi check (optimized SSH)
 ./ssh_pi_optimized.sh "lsusb | grep Movidius"  # Check camera
-nc -zv 192.168.1.202 5000 5001 5002 5003    # Check ports
+nc -zv 192.168.1.201 5000 5001 5002 5003  # Use ethernet IP for streaming ports    # Check ports
 
 # Force kill Pi processes if needed (optimized SSH)
 ./ssh_pi_optimized.sh "sudo fuser -k 5000/tcp 5001/tcp 5002/tcp 5003/tcp"

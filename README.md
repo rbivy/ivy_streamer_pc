@@ -48,8 +48,12 @@ chmod +x *.sh *.py
 
 ### Pi Side Setup (Required First)
 
-**IMPORTANT: Pi Ethernet Configuration**
-The Pi must have ethernet configured at 192.168.1.201. If not already configured:
+**IMPORTANT: Pi Dual Interface Configuration**
+The Pi needs both interfaces configured:
+- **Ethernet** (192.168.1.201): High-bandwidth streaming interface
+- **WiFi** (192.168.1.202): SSH/control interface
+
+**Ethernet Setup** (if not already configured):
 ```bash
 # On Debian 12 (Bookworm) systems, create systemd-networkd config:
 sudo tee /etc/systemd/network/10-eth0-static.network << 'EOF'
@@ -67,14 +71,15 @@ sudo systemctl enable systemd-networkd
 sudo systemctl restart systemd-networkd
 ```
 
+**Pi Streamer Setup**:
 ```bash
 # Pi repository: https://github.com/rbivy/ivy_streamer_pi
-# SSH to Pi and start the streamer using the virtual environment
+# SSH to Pi via WiFi interface for setup/control
 ssh ivyspec@192.168.1.202
 cd /home/ivyspec/ivy_streamer
 source venv/bin/activate
 
-# Choose one:
+# Start streaming (Pi will stream via ethernet 192.168.1.201)
 python quad_streamer_with_imu.py              # 4 videos + IMU
 ```
 
@@ -113,8 +118,8 @@ sleep 18 && ./test_quad_with_imu.sh
 
 **Method 4: Individual Components**
 ```bash
-# 1. Verify Pi connectivity (all data streams)
-nc -zv 192.168.1.202 5000 5001 5002 5003
+# 1. Verify Pi connectivity (all data streams - use ethernet IP)
+nc -zv 192.168.1.201 5000 5001 5002 5003
 # Note: Port 5004 is UDP for IMU
 
 # 2. Start PC receivers only (if Pi already running)
@@ -163,6 +168,16 @@ Shows:
 ./ssh_pi_optimized.sh "ps aux | grep quad_streamer"
 ```
 
+### Internet Sharing Setup (Optional)
+```bash
+# Configure PC as internet gateway for Pi (run once initially and after PC reboots)
+./setup_internet_sharing.sh
+```
+**Purpose**: Enables Pi internet access for git operations while maintaining ethernet streaming performance.
+- **When to run**: Once initially + after PC reboots (iptables rules don't persist)
+- **What it does**: PC becomes gateway so Pi gets internet via ethernet → PC WiFi → Internet
+- **Not required for streaming**: Only needed when Pi needs git/package update access
+
 ### SSH and Pi Management
 ```bash
 # Connect to Pi interactively (fast SSH keys)
@@ -195,6 +210,7 @@ ssh pi
 - `launch_imu_window.py` - **IMU GUI window** - Graphical IMU data display
 
 ### Utilities
+- `setup_internet_sharing.sh` - Configure PC as internet gateway for Pi (enables git operations)
 - `ssh_pi_optimized.sh` - Optimized SSH connection script for Pi management (key-based auth)
 - `system_diagnostic.sh` - Comprehensive system health check
 - `requirements.txt` - System dependencies list
@@ -228,8 +244,8 @@ ssh pi
 # 1. Use the automated startup script (optimized)
 ./start_quad_with_imu_optimized.sh
 
-# 2. Check Pi connectivity
-nc -zv 192.168.1.202 5000 5001 5002 5003
+# 2. Check Pi connectivity (use ethernet IP for streaming)
+nc -zv 192.168.1.201 5000 5001 5002 5003
 
 # 3. Verify Pi streamer is running (optimized SSH)
 ./ssh_pi_optimized.sh "ps aux | grep quad_streamer_with_imu"
@@ -238,7 +254,7 @@ nc -zv 192.168.1.202 5000 5001 5002 5003
 gst-inspect-1.0 --version
 
 # 5. Test individual video stream
-gst-launch-1.0 tcpclientsrc host=192.168.1.202 port=5000 ! h264parse ! avdec_h264 ! videoconvert ! autovideosink
+gst-launch-1.0 tcpclientsrc host=192.168.1.201 port=5000 ! h264parse ! avdec_h264 ! videoconvert ! autovideosink
 ```
 
 ### IMU Data Issues
