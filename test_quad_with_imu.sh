@@ -24,7 +24,7 @@ gst-launch-1.0 -v \
     avdec_h264 max-threads=1 ! \
     videoconvert ! \
     videoscale ! \
-    "video/x-raw,width=1280,height=720" ! \
+    "video/x-raw,width=1280,height=720,framerate=30/1" ! \
     autovideosink sync=false &
 RGB_PID=$!
 
@@ -37,6 +37,7 @@ gst-launch-1.0 -v \
     h264parse ! \
     avdec_h264 max-threads=1 ! \
     videoconvert ! \
+    "video/x-raw,framerate=30/1" ! \
     autovideosink sync=false &
 LEFT_PID=$!
 
@@ -49,6 +50,7 @@ gst-launch-1.0 -v \
     h264parse ! \
     avdec_h264 max-threads=1 ! \
     videoconvert ! \
+    "video/x-raw,framerate=30/1" ! \
     autovideosink sync=false &
 RIGHT_PID=$!
 
