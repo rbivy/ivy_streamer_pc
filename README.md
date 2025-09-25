@@ -23,10 +23,15 @@ pip3 install -r requirements.txt
 
 # Complete setup with clean video + IMU + real-time FPS monitoring (RECOMMENDED)
 ./start_quad_with_imu_optimized.sh
+
+# Optional: Launch RGBD point cloud visualization
+python3 pointcloud_visualizer.py
 ```
 
 ### 🎯 Key Features
 - **Real-time FPS monitoring** for all video streams
+- **RGBD Point Cloud Visualization** with Open3D integration
+- **Enhanced color mapping** based on depth and surface gradients
 - **Optimized video latency** via aggressive buffering
 - **Stable 30 FPS** hard limits on all streams
 - **Network bandwidth monitoring** with stream statistics
@@ -104,6 +109,12 @@ python quad_streamer_with_imu.py              # 4 videos + IMU
 - **Real-time sensor fusion**: 3-axis acceleration and rotation data
 - **High frequency**: 100Hz update rate for precise motion tracking
 - **Low latency**: UDP protocol optimized for sensor data
+
+**3D Visualization:**
+- **Point Cloud**: Real-time RGBD point cloud from depth stream
+- **Open3D Integration**: Interactive 3D visualization with camera controls
+- **Enhanced Coloring**: HSV color mapping based on depth and surface gradients
+- **Performance**: ~1+ FPS with 100k+ points for smooth visualization
 
 ## Starting the System
 
@@ -215,6 +226,7 @@ ssh pi
 ### Data Receivers
 - `imu_receiver.py` - **IMU data receiver** - Terminal-based IMU display
 - `launch_imu_window.py` - **IMU GUI window** - Graphical IMU data display
+- `pointcloud_visualizer.py` - **3D Point Cloud Visualizer** - RGBD point cloud with Open3D
 
 ### Utilities
 - `setup_internet_sharing.sh` - Configure PC as internet gateway for Pi (enables git operations)
@@ -321,7 +333,12 @@ The system now uses **optimized SSH key authentication** for faster Pi communica
 
 ## Version History
 
-- **v5.0**: Real-time FPS monitoring and performance optimization (CURRENT)
+- **v5.1**: RGBD Point Cloud Visualization with Open3D (CURRENT)
+  - Added real-time 3D point cloud visualization from depth stream
+  - Enhanced HSV color mapping based on depth and surface gradients
+  - Open3D integration with interactive camera controls
+  - Performance optimization for 100k+ point rendering at 1+ FPS
+- **v5.0**: Real-time FPS monitoring and performance optimization
   - Added real-time FPS tracking for all video streams
   - Implemented aggressive buffering for reduced latency
   - Fixed connection explosion issue causing quality degradation
