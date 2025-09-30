@@ -1,4 +1,4 @@
-# OAK-D Pro Streaming System - Software Architecture
+# OAK-D Pro Streaming System - Software Architecture v6.0 (SLAM-Optimized)
 
 ## System Overview
 
@@ -27,7 +27,7 @@ Connected via dual network interfaces (Ethernet for streaming, WiFi for control)
 │  │  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐       │        │
 │  │  │   RGB    │  │  LEFT    │  │  RIGHT   │  │   IMU    │       │        │
 │  │  │  Camera  │  │  Camera  │  │  Camera  │  │  Sensor  │       │        │
-│  │  │1920x1080 │  │1280x720  │  │1280x720  │  │  100Hz   │       │        │
+│  │  │1920x1080 │  │1280x720  │  │1280x720  │  │  200Hz   │       │        │
 │  │  └────┬─────┘  └────┬─────┘  └────┬─────┘  └────┬─────┘       │        │
 │  │       │             │             │             │               │        │
 │  │       ▼             ▼             ▼             │               │        │
@@ -44,8 +44,9 @@ Connected via dual network interfaces (Ethernet for streaming, WiFi for control)
 │  └───────────────┼─────────────────────────────────┼───────────────┘        │
 │                  │                                 │                          │
 │         ┌────────▼────────┐                       │                          │
-│         │ DEPTH COLORIZER │                       │                          │
-│         │  (Jet Colormap) │                       │                          │
+│         │  RAW 16-BIT     │                       │                          │
+│         │  DEPTH DATA     │                       │                          │
+│         │ (SLAM-READY)    │                       │                          │
 │         └────────┬────────┘                       │                          │
 │                  │                                 │                          │
 │  ┌───────────────▼─────────────────────────────────▼───────────────┐        │
@@ -56,9 +57,9 @@ Connected via dual network interfaces (Ethernet for streaming, WiFi for control)
 │  │  │                                                          │   │        │
 │  │  │  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌────────┐ │   │        │
 │  │  │  │   RGB    │  │  LEFT    │  │  RIGHT   │  │ DEPTH  │ │   │        │
-│  │  │  │ H.264    │  │ H.264    │  │ H.264    │  │  JPEG  │ │   │        │
+│  │  │  │H.264HIGH │  │H.264HIGH │  │H.264HIGH │  │RAW16BIT│ │   │        │
 │  │  │  │ Encoder  │  │ Encoder  │  │ Encoder  │  │Compress│ │   │        │
-│  │  │  │ 8 Mbps   │  │ 3 Mbps   │  │ 3 Mbps   │  │        │ │   │        │
+│  │  │  │ 10 Mbps  │  │ 4 Mbps   │  │ 4 Mbps   │  │        │ │   │        │
 │  │  │  └────┬─────┘  └────┬─────┘  └────┬─────┘  └───┬────┘ │   │        │
 │  │  └───────┼──────────────┼──────────────┼───────────┼──────┘   │        │
 │  │          │              │              │           │           │        │
@@ -249,8 +250,8 @@ Connected via dual network interfaces (Ethernet for streaming, WiFi for control)
    - Frame synchronization
 
 3. **Video Encoding** (Pi CPU)
-   - H.264 baseline profile encoding
-   - Bitrate control (8Mbps RGB, 3Mbps mono)
+   - H.264 HIGH profile encoding (SLAM-optimized)
+   - Bitrate control (10Mbps RGB, 4Mbps mono)
    - Keyframe insertion every 15 frames
 
 4. **Network Transmission** (TCP)
@@ -271,7 +272,7 @@ Connected via dual network interfaces (Ethernet for streaming, WiFi for control)
 ### IMU Data Pipeline
 
 1. **Sensor Sampling** (OAK-D Pro)
-   - 100Hz sampling rate
+   - 200Hz sampling rate (SLAM-optimized)
    - 3-axis accelerometer + gyroscope + magnetometer
    - Hardware timestamp synchronization
 
@@ -324,16 +325,16 @@ Connected via dual network interfaces (Ethernet for streaming, WiFi for control)
 ## Performance Characteristics
 
 ### Bandwidth Distribution
-- **RGB Stream**: ~8 Mbps (1920x1080 @ 30fps)
-- **Left Camera**: ~3 Mbps (1280x720 @ 30fps)
-- **Right Camera**: ~3 Mbps (1280x720 @ 30fps)
-- **Depth Stream**: ~1-2 Mbps (JPEG compressed)
-- **IMU Data**: <0.1 Mbps (JSON @ 100Hz)
-- **Total**: ~14-15 Mbps
+- **RGB Stream**: ~10 Mbps (1920x1080 @ 30fps, H.264 HIGH)
+- **Left Camera**: ~4 Mbps (1280x720 @ 30fps, H.264 HIGH)
+- **Right Camera**: ~4 Mbps (1280x720 @ 30fps, H.264 HIGH)
+- **Depth Stream**: ~3-4 Mbps (Raw 16-bit uncompressed)
+- **IMU Data**: <0.2 Mbps (JSON @ 200Hz)
+- **Total**: ~21-22 Mbps (SLAM-optimized)
 
 ### Latency Profile
 - **Camera → Pi**: <10ms (USB 3.0)
-- **Pi Encoding**: ~20-30ms (H.264 baseline)
+- **Pi Encoding**: ~25-35ms (H.264 HIGH profile)
 - **Network**: <5ms (local ethernet)
 - **PC Decode**: ~10-15ms (hardware accelerated)
 - **Display**: ~16ms (60Hz refresh)
@@ -354,7 +355,7 @@ Connected via dual network interfaces (Ethernet for streaming, WiFi for control)
 4. **Frame Rate Limiting**: 30 FPS cap prevents resource waste
 5. **Non-blocking I/O**: Prevents stream stalls
 6. **UDP for IMU**: Low-latency sensor data delivery
-7. **Depth Compression**: JPEG encoding reduces bandwidth 5x
+7. **Raw Depth Data**: 16-bit millimeter precision for SLAM
 
 ## Failure Modes & Recovery
 
@@ -363,3 +364,39 @@ Connected via dual network interfaces (Ethernet for streaming, WiFi for control)
 3. **Buffer Overflow**: Drop oldest frames (ring buffer)
 4. **CPU Overload**: Frame dropping with telemetry
 5. **Client Disconnect**: Automatic cleanup from client list
+
+## SLAM Optimizations (v6.0)
+
+### Raw Depth Streaming
+- **Format**: 16-bit unsigned integers (uint16)
+- **Units**: Millimeters from camera center
+- **Header**: Width(4) + Height(4) + ItemSize(4) + Timestamp(8) bytes
+- **Precision**: Metric depth values suitable for 3D reconstruction
+- **Advantage**: No compression artifacts, full depth range preserved
+
+### Video Quality Enhancement
+- **Profile**: H.264 HIGH (upgraded from BASELINE)
+- **Benefits**:
+  - Better compression efficiency at same bitrate
+  - Reduced visual artifacts for feature detection
+  - Improved edge preservation for stereo matching
+- **Bitrate**: Increased to maintain quality (10/4/4 Mbps)
+
+### High-Frequency IMU
+- **Frequency**: 200Hz (doubled from 100Hz)
+- **Precision**: Better motion capture for dynamic scenarios
+- **Latency**: <5ms UDP delivery
+- **Format**: JSON with synchronized timestamps
+
+### Temporal Synchronization
+- **Method**: Host-based timestamps (time.time())
+- **Precision**: Microsecond resolution
+- **Coverage**: Depth and IMU streams share common time reference
+- **Purpose**: Enables accurate sensor fusion for SLAM algorithms
+
+### SLAM Applications
+This architecture is optimized for:
+- **Visual SLAM**: Stereo vision with high-quality feature extraction
+- **Visual-Inertial Odometry**: 200Hz IMU with synchronized visual data
+- **Dense Mapping**: Raw millimeter-precision depth reconstruction
+- **Real-time Processing**: Low-latency synchronized sensor streams

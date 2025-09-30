@@ -3,7 +3,7 @@
 # Uses fast SSH key authentication
 
 echo "========================================="
-echo "  Optimized Quad Stream + IMU Data Setup"
+echo "  SLAM-Optimized Quad Stream + IMU Setup"
 echo "========================================="
 echo "Using fast SSH key authentication..."
 echo ""
@@ -15,7 +15,7 @@ sleep 2
 
 # Start Pi streamer
 echo "Starting quad streamer with IMU on Pi..."
-time ./ssh_pi_optimized.sh "cd /home/ivyspec/ivy_streamer && source venv/bin/activate && nohup python quad_streamer_with_imu.py > /dev/null 2>&1 & echo 'Streamer started'"
+time ./ssh_pi_optimized.sh "cd /home/ivyspec/ivy_streamer && source venv/bin/activate && python quad_streamer_with_imu.py &" &
 
 # Wait for initialization
 echo "Waiting 15 seconds for Pi quad+IMU streamer initialization..."
@@ -50,10 +50,11 @@ fi
 echo ""
 echo "✓ All video stream ports accessible"
 echo ""
-echo "Step 2: Starting PC receivers with advanced overlays and IMU display..."
+echo "Step 2: Starting SLAM-ready PC receivers..."
 echo "This will open:"
-echo "  - 4 video windows (RGB, Left, Right, Depth)"
-echo "  - 1 GUI window for IMU data"
+echo "  - 4 video windows (RGB, Left, Right with H.264 HIGH quality)"
+echo "  - 1 raw 16-bit depth window (SLAM-ready)"
+echo "  - 1 GUI window for 200Hz IMU data (synchronized timestamps)"
 echo "  - 1 network monitoring window"
 echo ""
 
