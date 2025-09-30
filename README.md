@@ -25,7 +25,11 @@ pip3 install -r requirements.txt
 ./start_quad_with_imu_optimized.sh
 ```
 
-### 🎯 Key Features
+### 🎯 Key Features (SLAM-Optimized)
+- **Raw 16-bit depth streaming** for metric SLAM reconstruction
+- **H.264 HIGH profile** encoding for superior video quality
+- **200Hz IMU frequency** for precise motion tracking
+- **Synchronized timestamps** across all sensor streams
 - **Real-time FPS monitoring** for all video streams
 - **Optimized video latency** via aggressive buffering
 - **Stable 30 FPS** hard limits on all streams
@@ -91,18 +95,19 @@ python quad_streamer_with_imu.py              # 4 videos + IMU
 
 ## Streaming Features
 
-**Video Streams:**
-- **RGB**: 1280x720 @ 30fps (H.264, 8Mbps) - Port 5000 *
-- **Left Mono**: 1280x720 @ 30fps (H.264, 3Mbps) - Port 5001
-- **Right Mono**: 1280x720 @ 30fps (H.264, 3Mbps) - Port 5002
-- **Depth**: 1280x720 @ 30fps (JPEG-encoded) - Port 5003
+**Video Streams (SLAM-Optimized):**
+- **RGB**: 1280x720 @ 30fps (H.264 HIGH, 10Mbps) - Port 5000 *
+- **Left Mono**: 1280x720 @ 30fps (H.264 HIGH, 4Mbps) - Port 5001
+- **Right Mono**: 1280x720 @ 30fps (H.264 HIGH, 4Mbps) - Port 5002
+- **Depth**: 1280x720 @ 30fps (**Raw 16-bit**, millimeter precision) - Port 5003
 
 **Note:** *RGB camera uses IMX378 sensor with 1080p native resolution that crops to 720p output. For SLAM applications requiring matched field-of-view, consider this limitation when calibrating stereo pairs.
 
-**IMU Data Stream:**
-- **IMU**: Accelerometer + Gyroscope @ 100Hz (UDP JSON) - Port 5004
+**IMU Data Stream (SLAM-Optimized):**
+- **IMU**: Accelerometer + Gyroscope @ **200Hz** (UDP JSON) - Port 5004
+- **Synchronized timestamps**: Common time reference with depth stream
 - **Real-time sensor fusion**: 3-axis acceleration and rotation data
-- **High frequency**: 100Hz update rate for precise motion tracking
+- **High frequency**: 200Hz update rate for dynamic motion tracking
 - **Low latency**: UDP protocol optimized for sensor data
 
 ## Starting the System
@@ -144,9 +149,9 @@ Shows:
   - **Accelerometer**: 3-axis acceleration in m/s²
   - **Gyroscope**: 3-axis rotation in rad/s and degrees/s
   - **Visual indicators**: ASCII bar graphs for acceleration vectors
-  - **Statistics**: Data rate (~100Hz), packet count, timestamps
+  - **Statistics**: Data rate (~200Hz), packet count, timestamps
 
-**Performance**: ~30fps RGB, ~17fps stereo cameras, ~30fps depth, ~100Hz IMU
+**Performance**: ~30fps RGB, ~17fps stereo cameras, ~30fps depth, ~200Hz IMU
 
 ## IMU Data Features
 
@@ -280,7 +285,7 @@ python3 -c "import tkinter, json, socket; print('Dependencies OK')"
 - **Network**: Use wired Ethernet instead of WiFi (14+ Mbps required)
 - **CPU**: Close other applications consuming resources
 - **Multiple displays**: Consider single monitor if system is slow
-- **IMU rate**: 100Hz is optimal; higher rates may cause lag
+- **IMU rate**: 200Hz is optimized for SLAM; provides high-frequency motion data
 
 ### Connection Problems
 ```bash
@@ -321,7 +326,13 @@ The system now uses **optimized SSH key authentication** for faster Pi communica
 
 ## Version History
 
-- **v5.0**: Real-time FPS monitoring and performance optimization (CURRENT)
+- **v6.0**: SLAM Optimization Release (CURRENT)
+  - **Raw 16-bit depth streaming** for metric SLAM reconstruction
+  - **H.264 HIGH profile** encoding for superior visual quality
+  - **200Hz IMU frequency** for precise motion tracking
+  - **Synchronized timestamps** across all sensor streams
+  - Enhanced for professional SLAM and visual odometry applications
+- **v5.0**: Real-time FPS monitoring and performance optimization
   - Added real-time FPS tracking for all video streams
   - Implemented aggressive buffering for reduced latency
   - Fixed connection explosion issue causing quality degradation

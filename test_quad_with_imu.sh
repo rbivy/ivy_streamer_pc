@@ -11,8 +11,8 @@ echo "Starting 6 windows:"
 echo "  RGB:   Port 5000 (1280x720 @ 30fps) - H.264 (clean)"
 echo "  Left:  Port 5001 (1280x720 @ 30fps) - H.264 (clean)"
 echo "  Right: Port 5002 (1280x720 @ 30fps) - H.264 (clean)"
-echo "  Depth: Port 5003 (1280x720 @ 30fps) - JPEG (clean)"
-echo "  IMU:   Port 5004 (100Hz) - UDP JSON data"
+echo "  Depth: Port 5003 (1280x720 @ 30fps) - Raw 16-bit (SLAM-ready)"
+echo "  IMU:   Port 5004 (200Hz) - UDP JSON data (synchronized timestamps)"
 echo "  Stats: Dual interface monitor (ethernet + WiFi)"
 echo ""
 
@@ -56,19 +56,19 @@ RIGHT_PID=$!
 
 sleep 2
 
-# Depth Stream (JPEG) - Clean, no overlays
-echo "Starting Depth receiver..."
+# Raw 16-bit Depth Stream - SLAM-ready
+echo "Starting Raw Depth receiver (SLAM-ready)..."
 python3 -c "
 import socket
 import cv2
 import numpy as np
 import struct
 
-def receive_depth_stream():
+def receive_raw_depth_stream():
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     try:
         sock.connect(('$PI_IP', 5003))
-        print('Connected to depth stream on port 5003')
+        print('Connected to raw 16-bit depth stream on port 5003')
 
         while True:
             # Receive frame size
@@ -80,28 +80,47 @@ def receive_depth_stream():
             # Receive frame data
             frame_data = b''
             while len(frame_data) < frame_size:
-                chunk = sock.recv(frame_size - len(frame_data))
+                chunk = sock.recv(min(65536, frame_size - len(frame_data)))
                 if not chunk:
                     break
                 frame_data += chunk
 
             if len(frame_data) == frame_size:
-                # Decode JPEG - clean display
-                img_array = np.frombuffer(frame_data, np.uint8)
-                depth_img = cv2.imdecode(img_array, cv2.IMREAD_GRAYSCALE)
+                # Parse header: width(4) + height(4) + itemsize(4) + timestamp(8)
+                header = struct.unpack('>IIIQ', frame_data[:20])
+                width, height, itemsize, timestamp_us = header
 
-                if depth_img is not None:
-                    cv2.imshow('Depth Stream', depth_img)
-                    if cv2.waitKey(1) & 0xFF == ord('q'):
-                        break
+                # Extract raw 16-bit depth data
+                depth_bytes = frame_data[20:]
+                depth_raw = np.frombuffer(depth_bytes, dtype=np.uint16).reshape((height, width))
+
+                # This is the raw depth in millimeters - perfect for SLAM!
+                # For visualization, normalize to 0-255
+                depth_normalized = cv2.normalize(depth_raw, None, 0, 255, cv2.NORM_MINMAX)
+                depth_display = depth_normalized.astype(np.uint8)
+
+                # Apply colormap for better visualization
+                depth_colored = cv2.applyColorMap(depth_display, cv2.COLORMAP_JET)
+
+                # Add overlay showing SLAM-ready status
+                cv2.putText(depth_colored, 'Raw 16-bit Depth (SLAM-Ready)', (10, 30),
+                           cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255, 255, 255), 2)
+                cv2.putText(depth_colored, f'Range: {depth_raw.min()}-{depth_raw.max()}mm', (10, 60),
+                           cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)
+                cv2.putText(depth_colored, f'Timestamp: {timestamp_us/1000000:.3f}s', (10, 90),
+                           cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)
+
+                cv2.imshow('SLAM-Ready Depth Stream', depth_colored)
+                if cv2.waitKey(1) & 0xFF == ord('q'):
+                    break
 
     except Exception as e:
-        print(f'Depth stream error: {e}')
+        print(f'Raw depth stream error: {e}')
     finally:
         sock.close()
         cv2.destroyAllWindows()
 
-receive_depth_stream()
+receive_raw_depth_stream()
 " &
 DEPTH_PID=$!
 
