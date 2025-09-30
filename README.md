@@ -25,11 +25,7 @@ pip3 install -r requirements.txt
 ./start_quad_with_imu_optimized.sh
 ```
 
-### 🎯 Key Features (SLAM-Optimized)
-- **Raw 16-bit depth streaming** for metric SLAM reconstruction
-- **H.264 HIGH profile** encoding for superior video quality
-- **200Hz IMU frequency** for precise motion tracking
-- **Synchronized timestamps** across all sensor streams
+### 🎯 Key Features
 - **Real-time FPS monitoring** for all video streams
 - **Optimized video latency** via aggressive buffering
 - **Stable 30 FPS** hard limits on all streams
@@ -95,19 +91,18 @@ python quad_streamer_with_imu.py              # 4 videos + IMU
 
 ## Streaming Features
 
-**Video Streams (SLAM-Optimized):**
-- **RGB**: 1280x720 @ 30fps (H.264 HIGH, 10Mbps) - Port 5000 *
-- **Left Mono**: 1280x720 @ 30fps (H.264 HIGH, 4Mbps) - Port 5001
-- **Right Mono**: 1280x720 @ 30fps (H.264 HIGH, 4Mbps) - Port 5002
-- **Depth**: 1280x720 @ 30fps (**Raw 16-bit**, millimeter precision) - Port 5003
+**Video Streams:**
+- **RGB**: 1280x720 @ 30fps (H.264, 8Mbps) - Port 5000 *
+- **Left Mono**: 1280x720 @ 30fps (H.264, 3Mbps) - Port 5001
+- **Right Mono**: 1280x720 @ 30fps (H.264, 3Mbps) - Port 5002
+- **Depth**: 1280x720 @ 30fps (JPEG-encoded) - Port 5003
 
 **Note:** *RGB camera uses IMX378 sensor with 1080p native resolution that crops to 720p output. For SLAM applications requiring matched field-of-view, consider this limitation when calibrating stereo pairs.
 
-**IMU Data Stream (SLAM-Optimized):**
-- **IMU**: Accelerometer + Gyroscope @ **200Hz** (UDP JSON) - Port 5004
-- **Synchronized timestamps**: Common time reference with depth stream
+**IMU Data Stream:**
+- **IMU**: Accelerometer + Gyroscope @ 100Hz (UDP JSON) - Port 5004
 - **Real-time sensor fusion**: 3-axis acceleration and rotation data
-- **High frequency**: 200Hz update rate for dynamic motion tracking
+- **High frequency**: 100Hz update rate for precise motion tracking
 - **Low latency**: UDP protocol optimized for sensor data
 
 ## Starting the System
@@ -118,7 +113,7 @@ python quad_streamer_with_imu.py              # 4 videos + IMU
 ./start_quad_with_imu_optimized.sh
 ```
 
-**Method 3: Manual Control**
+**Method 2: Manual Control**
 ```bash
 # Start Pi streamer manually via SSH (optimized)
 ./ssh_pi_optimized.sh "cd /home/ivyspec/ivy_streamer && source venv/bin/activate && python quad_streamer_with_imu.py" &
@@ -127,7 +122,7 @@ python quad_streamer_with_imu.py              # 4 videos + IMU
 sleep 18 && ./test_quad_with_imu.sh
 ```
 
-**Method 4: Individual Components**
+**Method 3: Individual Components**
 ```bash
 # 1. Verify Pi connectivity (all data streams - use ethernet IP)
 nc -zv 192.168.1.201 5000 5001 5002 5003
@@ -149,9 +144,9 @@ Shows:
   - **Accelerometer**: 3-axis acceleration in m/s²
   - **Gyroscope**: 3-axis rotation in rad/s and degrees/s
   - **Visual indicators**: ASCII bar graphs for acceleration vectors
-  - **Statistics**: Data rate (~200Hz), packet count, timestamps
+  - **Statistics**: Data rate (~100Hz), packet count, timestamps
 
-**Performance**: ~30fps RGB, ~17fps stereo cameras, ~30fps depth, ~200Hz IMU
+**Performance**: ~30fps RGB, ~17fps stereo cameras, ~30fps depth, ~100Hz IMU
 
 ## IMU Data Features
 
@@ -258,6 +253,7 @@ ssh pi
 
 # 2. Check Pi connectivity (use ethernet IP for streaming)
 nc -zv 192.168.1.201 5000 5001 5002 5003
+# Note: Port 5004 is UDP for IMU - test with: python3 imu_receiver.py
 
 # 3. Verify Pi streamer is running (optimized SSH)
 ./ssh_pi_optimized.sh "ps aux | grep quad_streamer_with_imu"
@@ -285,7 +281,7 @@ python3 -c "import tkinter, json, socket; print('Dependencies OK')"
 - **Network**: Use wired Ethernet instead of WiFi (14+ Mbps required)
 - **CPU**: Close other applications consuming resources
 - **Multiple displays**: Consider single monitor if system is slow
-- **IMU rate**: 200Hz is optimized for SLAM; provides high-frequency motion data
+- **IMU rate**: 100Hz is optimal; higher rates may cause lag
 
 ### Connection Problems
 ```bash
@@ -326,12 +322,12 @@ The system now uses **optimized SSH key authentication** for faster Pi communica
 
 ## Version History
 
-- **v6.0**: SLAM Optimization Release (CURRENT)
-  - **Raw 16-bit depth streaming** for metric SLAM reconstruction
-  - **H.264 HIGH profile** encoding for superior visual quality
-  - **200Hz IMU frequency** for precise motion tracking
-  - **Synchronized timestamps** across all sensor streams
-  - Enhanced for professional SLAM and visual odometry applications
+- **v6.0**: SLAM Optimization with Raw Depth Streaming (CURRENT)
+  - **BREAKING CHANGE**: Depth stream now provides raw 16-bit depth values instead of JPEG
+  - **SLAM-ready**: Raw depth data in millimeters, perfect for 3D reconstruction
+  - Clean video streams without overlays for computer vision processing
+  - Enhanced network monitoring with 6-window display
+  - Improved stability and performance optimizations
 - **v5.0**: Real-time FPS monitoring and performance optimization
   - Added real-time FPS tracking for all video streams
   - Implemented aggressive buffering for reduced latency
